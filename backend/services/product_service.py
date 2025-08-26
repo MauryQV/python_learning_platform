@@ -2,7 +2,7 @@ from backend.schema.product import Product, ProductCreate
 from backend.services.supabase_client import supabase
 
 def create_product(product: ProductCreate) -> Product:
-    response = supabase.table("products").insert(product.dict()).execute()
+    response = supabase.table("products").insert(product.model_dump()).execute()
     if not response.data:
         raise ValueError("Error creating product")
     return response.data[0]

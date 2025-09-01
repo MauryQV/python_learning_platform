@@ -12,5 +12,5 @@ app = FastAPI(
     version="1.0.0"
 )
 
-app.include_router(api, prefix=settings.API_V1_STR)
-app.include_router(auth_router, prefix=settings.API_V1_STR)
+app.include_router(api, prefix=settings.API_V1_STR, tags=["api de pruebas de fastapi"])
+app.include_router(auth_router, prefix=settings.API_V1_STR, tags=["Autentificacion"])

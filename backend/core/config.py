@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     # Supabase Settings
     SUPABASE_URL: str
     SUPABASE_KEY: str
+    SECRET_KEY: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
    
     
     # Database

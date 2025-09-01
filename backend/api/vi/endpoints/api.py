@@ -5,6 +5,7 @@ from backend.services import product_service
 router = APIRouter()
 
 @router.post("/products/", response_model=Product)
+
 def create_product(product: ProductCreate):
     try:
         return product_service.create_product(product)

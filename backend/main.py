@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.api.vi.endpoints.api import router as api
+
+from backend.api.vi.endpoints.auth import router as auth_router
 from backend.core.config import settings
 
 
@@ -10,4 +12,5 @@ app = FastAPI(
     version="1.0.0"
 )
 
-app.include_router(api, prefix=settings.API_V1_STR)
+app.include_router(api, prefix=settings.API_V1_STR, tags=["api de pruebas de fastapi"])
+app.include_router(auth_router, prefix=settings.API_V1_STR, tags=["Autentificacion"])

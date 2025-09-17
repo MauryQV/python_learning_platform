@@ -1,0 +1,38 @@
+# Directorio de dependencias de Node
+node_modules/
+
+# Archivos de depuración y registro
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Variables de entorno
+.env
+.env.development
+.env.test
+.env.production
+.env.local
+
+# Archivos de caché del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de caché de IDEs y editores de código
+.vscode/
+.idea/
+
+# Compilaciones y archivos de salida
+dist/
+build/
+coverage/
+
+# Claves privadas y de configuración
+*.key
+*.pem
+*.p12
+
+# Archivos generados por el sistema
+*.swp
+*.bak
+*~

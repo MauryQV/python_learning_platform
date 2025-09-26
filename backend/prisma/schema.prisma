@@ -1,0 +1,166 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model Usuario {
+    id_usuario    Int      @id @default(autoincrement())
+    nombre        String
+    apellido      String
+    email         String   @unique
+    passwordHash  String
+    fechaRegistro DateTime @default(now())
+    estado        String   @default("activo")
+
+    roles         UsuarioRol[]
+    inscripciones Inscripcion[]
+    intentos      Intento[]
+    entregas      Entrega[]
+    progresos     ProgresoTopico[]
+    diagnosticos  Diagnostico[]
+}
+
+model Rol {
+    id_rol      Int     @id @default(autoincrement())
+    nombre      String
+    descripcion String?
+
+    usuarios UsuarioRol[]
+}
+
+model UsuarioRol {
+    id_usuario      Int
+    id_rol          Int
+    fechaAsignacion DateTime @default(now())
+
+    usuario Usuario @relation(fields: [id_usuario], references: [id_usuario])
+    rol     Rol     @relation(fields: [id_rol], references: [id_rol])
+
+    @@id([id_usuario, id_rol])
+}
+
+model Curso {
+    id_curso    Int       @id @default(autoincrement())
+    nombre      String
+    descripcion String?
+    fechaInicio DateTime
+    fechaFin    DateTime?
+    estado      String    @default("activo")
+
+    inscripciones Inscripcion[]
+    modulos       Modulo[]
+    diagnosticos  Diagnostico[]
+}
+
+model Inscripcion {
+    id_inscripcion   Int      @id @default(autoincrement())
+    id_usuario       Int
+    id_curso         Int
+    fechaInscripcion DateTime @default(now())
+    estado           String   @default("activa")
+
+    usuario Usuario @relation(fields: [id_usuario], references: [id_usuario])
+    curso   Curso   @relation(fields: [id_curso], references: [id_curso])
+}
+
+model Modulo {
+    id_modulo   Int     @id @default(autoincrement())
+    id_curso    Int
+    titulo      String
+    descripcion String?
+    orden       Int
+
+    curso   Curso    @relation(fields: [id_curso], references: [id_curso])
+    topicos Topico[]
+}
+
+model Topico {
+    id_topico   Int     @id @default(autoincrement())
+    id_modulo   Int
+    titulo      String
+    descripcion String?
+    orden       Int
+
+    modulo     Modulo           @relation(fields: [id_modulo], references: [id_modulo])
+    media      MediaAssets[]
+    ejercicios Ejercicio[]
+    entregas   Entrega[]
+    progresos  ProgresoTopico[]
+}
+
+model MediaAssets {
+    id_media    Int     @id @default(autoincrement())
+    id_topico   Int
+    tipo        String
+    url         String
+    descripcion String?
+
+    topico Topico @relation(fields: [id_topico], references: [id_topico])
+}
+
+model Ejercicio {
+    id_ejercicio      Int     @id @default(autoincrement())
+    id_topico         Int
+    enunciado         String
+    tipo              String
+    nivelDificultad   String?
+    respuestaCorrecta String?
+
+    topico   Topico    @relation(fields: [id_topico], references: [id_topico])
+    intentos Intento[]
+}
+
+model Intento {
+    id_intento      Int      @id @default(autoincrement())
+    id_usuario      Int
+    id_ejercicio    Int
+    fechaIntento    DateTime @default(now())
+    respuesta       String?
+    resultado       String?
+    puntajeObtenido Int?
+
+    usuario   Usuario   @relation(fields: [id_usuario], references: [id_usuario])
+    ejercicio Ejercicio @relation(fields: [id_ejercicio], references: [id_ejercicio])
+}
+
+model Entrega {
+    id_entrega        Int      @id @default(autoincrement())
+    id_usuario        Int
+    id_topico         Int
+    fechaEntrega      DateTime @default(now())
+    archivoUrl        String?
+    calificacion      Int?
+    retroalimentacion String?
+
+    usuario Usuario @relation(fields: [id_usuario], references: [id_usuario])
+    topico  Topico  @relation(fields: [id_topico], references: [id_topico])
+}
+
+model ProgresoTopico {
+    id_progreso      Int       @id @default(autoincrement())
+    id_usuario       Int
+    id_topico        Int
+    estado           String    @default("no_iniciado")
+    fechaInicio      DateTime  @default(now())
+    fechaCompletado  DateTime?
+    porcentajeAvance Int       @default(0)
+
+    usuario Usuario @relation(fields: [id_usuario], references: [id_usuario])
+    topico  Topico  @relation(fields: [id_topico], references: [id_topico])
+}
+
+model Diagnostico {
+    id_diagnostico   Int      @id @default(autoincrement())
+    id_usuario       Int
+    id_curso         Int
+    fecha            DateTime @default(now())
+    puntaje          Int?
+    nivelRecomendado String?
+
+    usuario Usuario @relation(fields: [id_usuario], references: [id_usuario])
+    curso   Curso   @relation(fields: [id_curso], references: [id_curso])
+}

@@ -79,17 +79,16 @@ model Modulo {
 }
 
 model Topico {
-    id_topico   Int     @id @default(autoincrement())
+    id_topico   Int              @id @default(autoincrement())
     id_modulo   Int
     titulo      String
     descripcion String?
     orden       Int
-
-    modulo     Modulo           @relation(fields: [id_modulo], references: [id_modulo])
-    media      MediaAssets[]
-    ejercicios Ejercicio[]
-    entregas   Entrega[]
-    progresos  ProgresoTopico[]
+    modulo      Modulo           @relation(fields: [id_modulo], references: [id_modulo])
+    media       MediaAssets[]
+    ejercicios  Ejercicio[]
+    entregas    Entrega[]
+    progresos   ProgresoTopico[]
 }
 
 model MediaAssets {

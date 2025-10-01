@@ -1,88 +1,88 @@
-🐍 Python Learning Platform
+# 🐍 Python Learning Platform
 
-Plataforma interactiva para aprender Python con ejecución de código en tiempo real, análisis automático y seguimiento de progreso.
+Una plataforma interactiva para aprender Python con ejecución de código en tiempo real, análisis automático y seguimiento de progreso personalizado.
 
-Características
+---
 
- Módulos interactivos de aprendizaje Python
+##  Características
 
- Ejecución de código en tiempo real
+-  **Módulos interactivos** de aprendizaje Python
+-  **Ejecución de código en tiempo real**
+-  **Análisis automático de código** (AST)
+-  **Dashboard para profesores** con métricas en vivo
+-  **Dos modos**: Aprendizaje y Práctica
+-  **Seguimiento de progreso** personalizado
 
- Análisis automático de código (AST)
+---
 
-Dashboard para profesores con métricas en vivo
+##  Stack Tecnológico
 
- Dos modos: Aprendizaje y Práctica
+### Backend
+- **Express** (Node.js)
+- **Supabase** (PostgreSQL + Auth)
+- **Docker** (ejecución segura de código)
+- **WebSockets** (tiempo real)
 
- Seguimiento de progreso personalizado
+### Frontend
+- **React** (JavaScript)
+- **Tailwind CSS**
 
- Stack Tecnológico
+---
 
-Backend:
+##  Instalación Rápida
 
-Express (Node.js)
+### Prerrequisitos
 
-Supabase (PostgreSQL + Auth)
+Asegúrate de tener instalado:
 
-Docker (ejecución segura de código)
+- Node.js 18+
+- Docker
+- Cuenta en Supabase
 
-WebSockets (tiempo real)
+### Backend Setup
 
-Frontend:
+1. **Clonar el repositorio:**
+   ```bash
+   git clone https://github.com/tu-usuario/python-learning-platform.git
+   cd python-learning-platform/backend
+   ```
 
-React (JavaScript)
+2. **Instalar dependencias:**
+   ```bash
+   npm install
+   ```
 
-Monaco Editor (VS Code editor)
+3. **Configurar variables de entorno:**
+   
+   Crea un archivo `.env` en `backend/` basado en `.env.example`
 
-Tailwind CSS
+4. **Ejecutar servidor:**
+   ```bash
+   npm run dev
+   ```
 
-Instalación Rápida
-Prerrequisitos
+### Frontend Setup
 
-Node.js 18+
+1. **Ir a la carpeta del frontend:**
+   ```bash
+   cd ../frontend
+   ```
 
-Docker
+2. **Instalar dependencias:**
+   ```bash
+   npm install
+   ```
 
-Cuenta en Supabase
+3. **Ejecutar en modo desarrollo:**
+   ```bash
+   npm start
+   ```
 
-Backend Setup
+---
 
-Clonar repositorio:
+## 📁 Estructura del Proyecto
 
-git clone https://github.com/tu-usuario/python-learning-platform.git
-cd python-learning-platform/backend
-
-
-Instalar dependencias:
-
-npm install
-
-
-Configurar variables de entorno:
-
-Crea un archivo .env en backend/ basado en .env.example.
-
-Ejecutar servidor:
-
-npm run dev
-
-Frontend Setup
-
-Ir a la carpeta del frontend:
-
-cd ../frontend
-
-
-Instalar dependencias:
-
-npm install
-
-
-Ejecutar en modo desarrollo:
-
-npm start
-
-📁 Estructura del Proyecto
+```
 python-learning-platform/
 ├── 📁 backend/
 │   ├── 📁 src/
@@ -93,49 +93,73 @@ python-learning-platform/
 │   │   └── server.js          # Punto de entrada
 │   ├── package.json
 │   └── .env.example
+│
 ├── 📁 frontend/
 │   ├── 📁 src/
-│   │   ├── 📁 components/
-│   │   ├── 📁 pages/
-│   │   └── App.js
+│   │   ├── 📁 components/     # Componentes reutilizables
+│   │   ├── 📁 pages/          # Páginas de la aplicación
+│   │   └── App.js             # Componente principal
 │   └── package.json
+│
 └── README.md
+```
 
-🧪 Testing
-# Backend tests
+---
+
+##  Testing
+
+**Backend:**
+```bash
 cd backend
 npm test
+```
 
-# Frontend tests
+**Frontend:**
+```bash
 cd frontend
 npm test
+```
 
- Deployment
-Render/Railway (Backend)
+---
 
-Conectar repositorio
+##  Deployment
 
-Configurar variables de entorno
+### Backend (Render/Railway)
 
-Deploy automático
+1. Conectar repositorio
+2. Configurar variables de entorno
+3. Deploy automático
 
-Vercel/Netlify (Frontend)
+### Frontend (Vercel/Netlify)
 
-Conectar repositorio
+1. Conectar repositorio
+2. Configurar build commands
+3. Deploy automático
 
-Configurar build commands
+---
 
-Deploy automático
+##  Contribuir
 
-🤝 Contribuir
+Las contribuciones son bienvenidas. Para contribuir:
 
-Haz un fork del proyecto
+1. Haz un **fork** del proyecto
+2. Crea una rama para tu feature:
+   ```bash
+   git checkout -b feature/AmazingFeature
+   ```
+3. Haz commit de tus cambios:
+   ```bash
+   git commit -m 'Add: AmazingFeature'
+   ```
+4. Sube los cambios:
+   ```bash
+   git push origin feature/AmazingFeature
+   ```
+5. Abre un **Pull Request**
 
-Crea una rama feature (git checkout -b feature/AmazingFeature)
+---
 
-Commit cambios (git commit -m 'Add AmazingFeature')
 
-Push a la rama (git push origin feature/AmazingFeature)
 
-Abre un Pull Request
+
 

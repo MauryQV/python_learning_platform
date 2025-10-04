@@ -1,4 +1,3 @@
-
 import js from "@eslint/js";
 import globals from "globals";
 import { defineConfig } from "eslint/config";
@@ -19,11 +18,11 @@ export default defineConfig([
     },
     rules: {
       ...js.configs.recommended.rules,
-      ...prettierPlugin.configs.recommended.rules, 
+      ...prettierPlugin.configs.recommended.rules,
       "prettier/prettier": "error",
       "no-unused-vars": "warn",
       "no-console": "off",
-      "eqeqeq": ["error", "always"],
+      eqeqeq: ["error", "always"],
     },
     ignores: ["node_modules", "dist", "build", "coverage"],
   },

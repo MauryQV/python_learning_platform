@@ -19,7 +19,7 @@ export default function Login() {
     if (error) {
       setMessage(error.message);
     } else {
-      setMessage("Sesión iniciada correctamente.");
+      setMessage("Sesión iniciada exitósamente.");
       setTimeout(() => navigate("/"), 1500);
     }
   };

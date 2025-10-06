@@ -2,7 +2,7 @@ import { useState } from "react";
 import {Box, Button, Checkbox, Container, FormControlLabel, Grid, IconButton, InputAdornment, Link, TextField, Typography, Paper} from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import PasswordStrengthBar from "./PasswordStrengthBar.jsx";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 
 export default function Register() {
@@ -26,7 +26,7 @@ export default function Register() {
     if (!form.lastName.trim()) err.lastName = "Obligatorio";
     if (!emailValid(form.email)) err.email = "Email no válido";
     if (!pwValid(form.password)) err.password = "Min 8, mayúscula, minúscula, número";
-    if (form.password !== form.confirmPassword) err.confirmPassword = "Las contraseñas nos coinciden";
+    if (form.password !== form.confirmPassword) err.confirmPassword = "Las contraseñas no coinciden";
     if (!form.accepted) err.accepted = "Debes aceptar los Términos y Condiciones";
     setErrors(err);
     return Object.keys(err).length === 0;
@@ -37,14 +37,38 @@ export default function Register() {
     setForm((f) => ({ ...f, [k]: v }));
   };
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+
+    try {
+      setSubmitting(true);
+      setErrors((prev) => ({ ...prev, submit: undefined }));
+
+      // ⬇️ Registro directo con Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          data: {
+            firstName: form.firstName,
+            lastName: form.lastName,
+          },
+          emailRedirectTo: `${window.location.origin}/login`, 
+        },
+      });
+
+      if (error) {
+        setErrors((prev) => ({ ...prev, submit: error.message || "No se pudo crear la cuenta" }));
+        return;
+      }
+
       nav("/verify-email");
-    }, 700);
+    } catch (err) {
+      setErrors((prev) => ({ ...prev, submit: "Error inesperado. Intenta de nuevo." }));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -52,7 +76,7 @@ export default function Register() {
       <Paper elevation={3} sx={{ p: 4, borderRadius: 4 }}>
         <Typography variant="h4" gutterBottom>Crea tu cuenta</Typography>
         <Typography color="text.secondary" sx={{ mb: 3 }}>
-          Comienza a aprender Pyhton con módulos interactivos 
+          Comienza a aprender Python con módulos interactivos
         </Typography>
 
         <Box component="form" noValidate onSubmit={onSubmit}>
@@ -101,12 +125,12 @@ export default function Register() {
                 value={form.password}
                 onChange={onChange("password")}
                 error={!!errors.password}
-                helperText={errors.password || "Ingresa al menos 8 carateres,mayúscula, minúscula y un número"}
+                helperText={errors.password || "Ingresa al menos 8 caracteres, mayúscula, minúscula y un número"}
                 autoComplete="new-password"
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton onClick={() => setShowPw(s => !s)} edge="end">
+                      <IconButton onClick={() => setShowPw(s => !s)} edge="end" aria-label="toggle password visibility">
                         {showPw ? <VisibilityOff/> : <Visibility/>}
                       </IconButton>
                     </InputAdornment>
@@ -129,7 +153,7 @@ export default function Register() {
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton onClick={() => setShowPw2(s => !s)} edge="end">
+                      <IconButton onClick={() => setShowPw2(s => !s)} edge="end" aria-label="toggle confirm password visibility">
                         {showPw2 ? <VisibilityOff/> : <Visibility/>}
                       </IconButton>
                     </InputAdornment>
@@ -154,6 +178,12 @@ export default function Register() {
               )}
             </Grid>
 
+            {errors.submit && (
+              <Grid item xs={12}>
+                <Typography color="error" variant="body2">{errors.submit}</Typography>
+              </Grid>
+            )}
+
             <Grid item xs={12}>
               <Button
                 fullWidth type="submit" variant="contained" size="large"
@@ -165,7 +195,10 @@ export default function Register() {
 
             <Grid item xs={12}>
               <Typography variant="body2" color="text.secondary">
-                Ya tienes cuenta? <Link href="#">Inicia Sesión</Link>
+                ¿Ya tienes cuenta?{" "}
+                <Link component={RouterLink} to="/login">
+                  Inicia Sesión
+                </Link>
               </Typography>
             </Grid>
           </Grid>

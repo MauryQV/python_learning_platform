@@ -47,7 +47,7 @@ export default function Login() {
           backgroundColor: "white",
         }}
       >
-        <Typography variant="h4" mb={3} align="center" fontWeight="bold">
+        <Typography variant="h4" mb={3} align="center" fontWeight="normal">
           Iniciar Sesión
         </Typography>
 
@@ -88,7 +88,7 @@ export default function Login() {
             style={{
               color: "#1976d2",
               textDecoration: "none",
-              fontWeight: "bold",
+              fontWeight: "normal",
             }}
           >
             Regístrate aquí

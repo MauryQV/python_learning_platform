@@ -1,59 +1,85 @@
+// src/services/auth.service.js
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import prisma from "../../config/prismaClient.js";
-import Joi from "joi";
+import userRepository from "../repositories/user.repository.js";
+import tokenService from "./token.service.js";
 
-const SECRET = process.env.JWT_SECRET;
-// esquema de validacion para el registro
-const registerSchema = Joi.object({
-  firstName: Joi.string().min(2).max(50).required(),
-  lastName: Joi.string().min(2).max(50).required(),
-  email: Joi.string().email().required(),
-  password: Joi.string().min(6).required(),
-  confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({'any.only': 'Passwords do not match'}),
-});
+class AuthService {
+  async register({ firstName, lastName, email, password }) {
+    // Verificar si el usuario ya existe
+    const existingUser = await userRepository.findByEmail(email);
+    if (existingUser) {
+      const error = new Error("El email ya está registrado");
+      error.statusCode = 409;
+      throw error;
+    }
 
-// Esquema de validación para login
-const loginSchema = Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().min(6).required(),
-});
+    // Hashear contraseña
+    const passwordHash = await bcrypt.hash(password, 10);
 
-export const registerUserService = async ({ firstName, lastName, email, password }) => {
-   // Validar datos
-  const { error } = registerSchema.validate({ firstName, lastName, email, password });
-  if (error) throw new Error(error.details[0].message);
+    // Crear usuario
+    const newUser = await userRepository.create({
+      email,
+      passwordHash,
+      firstName,
+      lastName,
+    });
 
-  //console.log(firstName, lastName, email, password);
-  const existing = await prisma.user.findUnique({ where: { email} });
-  if (existing) {
-    throw new Error("El correo ya está registrado");
+    // Generar token
+    const token = tokenService.generateToken(newUser);
+
+    return {
+      token,
+      user: this._formatUserResponse(newUser),
+    };
   }
-  // hash
-  const passwordHash = await bcrypt.hash(password, 10);
-  // crear
-  const user = await prisma.user.create({
-    data: { firstName, lastName, email, passwordHash },
-  });
-  return user;
-};
 
+  async login(email, password) {
+    const user = await userRepository.findByEmail(email);
 
-export const loginUserService = async ({ email, password }) => {
-  //validar datos 
-  const { error } = loginSchema.validate({ email, password });
-  if (error) throw new Error(error.details[0].message);
+    if (!user) {
+      const error = new Error("Credenciales incorrectas");
+      error.statusCode = 401;
+      throw error;
+    }
 
-  const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) throw new Error("The user does not exist");
+    // Validar contraseña
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isPasswordValid) {
+      const error = new Error("Credenciales incorrectas");
+      error.statusCode = 401;
+      throw error;
+    }
 
-  const valid = await bcrypt.compare(password, user.passwordHash);
-  if (!valid) throw new Error("The password is not correct");
+    // Generar token
+    const token = tokenService.generateToken(user);
 
-  // generar token
-  const token = jwt.sign({ id: user.id, email: user.email }, SECRET, {
-    expiresIn: "1h",
-  });
+    return {
+      token,
+      user: this._formatUserResponse(user),
+    };
+  }
 
-  return { token, user };
-};
+  async verifyUser(userId) {
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      const error = new Error("Usuario no encontrado");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    return this._formatUserResponse(user);
+  }
+
+  _formatUserResponse(user) {
+    return {
+      id: user.userId,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      status: user.status,
+      registeredAt: user.registeredAt,
+    };
+  }
+}
+
+export default new AuthService();

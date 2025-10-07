@@ -1,7 +1,14 @@
 import React, { useState } from "react";
-import { TextField, Button, Container, Typography, Box, CircularProgress } from "@mui/material";
+import {
+  TextField,
+  Button,
+  Container,
+  Typography,
+  Box,
+  CircularProgress,
+} from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -9,34 +16,23 @@ export default function Login() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setMessage("");
     setLoading(true);
 
-    try {
-      const response = await axios.post(
-        "http://localhost:2999/api/auth/login",
-        { email, password },
-        { headers: { "Content-Type": "application/json" } }
-      );
+    const result = await login(email, password);
 
-      if (response.data.token) {
-        setMessage(`¡Bienvenido, ${response.data.user.firstName}!`);
-        localStorage.setItem("token", response.data.token);
-
-        // Espera un poco antes de redirigir
-        setTimeout(() => navigate("/"), 1500);
-      } else {
-        setMessage("Credenciales incorrectas o error al iniciar sesión.");
-      }
-    } catch (err) {
-      console.error("Error en login:", err);
-      setMessage("Error en el servidor o credenciales incorrectas.");
-    } finally {
-      setLoading(false);
+    if (result.success) {
+      setMessage(`¡Bienvenido, ${result.user.firstName}!`);
+      setTimeout(() => navigate("/dashboard"), 1500);
+    } else {
+      setMessage(result.error);
     }
+
+    setLoading(false);
   };
 
   return (
@@ -97,7 +93,11 @@ export default function Login() {
             sx={{ mt: 2, py: 1.2 }}
             disabled={loading}
           >
-            {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : "Iniciar Sesión"}
+            {loading ? (
+              <CircularProgress size={24} sx={{ color: "white" }} />
+            ) : (
+              "Iniciar Sesión"
+            )}
           </Button>
         </form>
 

@@ -19,7 +19,7 @@ export default function Login() {
     if (error) {
       setMessage(error.message);
     } else {
-      setMessage("Sesión iniciada correctamente.");
+      setMessage("Sesión iniciada exitósamente.");
       setTimeout(() => navigate("/"), 1500);
     }
   };
@@ -47,7 +47,7 @@ export default function Login() {
           backgroundColor: "white",
         }}
       >
-        <Typography variant="h4" mb={3} align="center" fontWeight="bold">
+        <Typography variant="h4" mb={3} align="center" fontWeight="normal">
           Iniciar Sesión
         </Typography>
 
@@ -88,7 +88,7 @@ export default function Login() {
             style={{
               color: "#1976d2",
               textDecoration: "none",
-              fontWeight: "bold",
+              fontWeight: "normal",
             }}
           >
             Regístrate aquí

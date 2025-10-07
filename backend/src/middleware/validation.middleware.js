@@ -1,15 +1,14 @@
 import Joi from "joi";
 
-
 const loginSchema = Joi.object({
   email: Joi.string().email().required().messages({
     "string.email": "Invalid email",
-    "any.required": "The email is required"
+    "any.required": "The email is required",
   }),
   password: Joi.string().min(6).required().messages({
     "string.min": "The password must be at least 6 characters long",
-    "any.required": "The password is required"
-  })
+    "any.required": "The password is required",
+  }),
 });
 
 // Middleware de validación de login
@@ -24,7 +23,6 @@ export const validateLogin = (req, res, next) => {
   }
   next();
 };
-
 
 // Esquema para registro
 const registerSchema = Joi.object({
@@ -46,13 +44,10 @@ const registerSchema = Joi.object({
     "string.min": "The passord must be at least 6 chracters long",
     "any.required": "The password is required",
   }),
-  confirmPassword: Joi.string()
-    .valid(Joi.ref("password"))
-    .required()
-    .messages({
-      "any.only": "The passwords does not match",
-      "any.required": "The confirm passord is required",
-    }),
+  confirmPassword: Joi.string().valid(Joi.ref("password")).required().messages({
+    "any.only": "The passwords does not match",
+    "any.required": "The confirm passord is required",
+  }),
 });
 
 // Middleware de validación de registro

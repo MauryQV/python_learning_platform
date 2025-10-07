@@ -1,26 +1,41 @@
 import React, { useState } from "react";
-import { TextField, Button, Container, Typography, Box } from "@mui/material";
-import { supabase } from "../lib/supabaseClient";
+import { TextField, Button, Container, Typography, Box, CircularProgress } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    setMessage("");
+    setLoading(true);
 
-    if (error) {
-      setMessage(error.message);
-    } else {
-      setMessage("Sesión iniciada correctamente.");
-      setTimeout(() => navigate("/"), 1500);
+    try {
+      const response = await axios.post(
+        "http://localhost:2999/api/auth/login",
+        { email, password },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      if (response.data.token) {
+        setMessage(`¡Bienvenido, ${response.data.user.firstName}!`);
+        localStorage.setItem("token", response.data.token);
+
+        // Espera un poco antes de redirigir
+        setTimeout(() => navigate("/"), 1500);
+      } else {
+        setMessage("Credenciales incorrectas o error al iniciar sesión.");
+      }
+    } catch (err) {
+      console.error("Error en login:", err);
+      setMessage("Error en el servidor o credenciales incorrectas.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -34,16 +49,16 @@ export default function Login() {
         alignItems: "center",
         minHeight: "100vh",
         width: "100vw",
-        background: "linear-gradient(to right, #f5f6fa, #eaeef3)", 
+        background: "linear-gradient(to right, #f5f6fa, #eaeef3)",
       }}
     >
       <Box
-         sx={{
-          width: "90%",        
-          maxWidth: 700,       
-          p: 6,                
-          boxShadow: 8,        
-          borderRadius: 4,     
+        sx={{
+          width: "90%",
+          maxWidth: 700,
+          p: 6,
+          boxShadow: 8,
+          borderRadius: 4,
           backgroundColor: "white",
         }}
       >
@@ -53,14 +68,16 @@ export default function Login() {
 
         <form onSubmit={handleLogin}>
           <TextField
-            label="Email"
+            label="Correo electrónico"
             type="email"
             variant="outlined"
             fullWidth
             margin="normal"
             required
+            value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
+
           <TextField
             label="Contraseña"
             type="password"
@@ -68,16 +85,19 @@ export default function Login() {
             fullWidth
             margin="normal"
             required
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+
           <Button
             type="submit"
             variant="contained"
             color="primary"
             fullWidth
-            sx={{ mt: 2 }}
+            sx={{ mt: 2, py: 1.2 }}
+            disabled={loading}
           >
-            Iniciar Sesión
+            {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : "Iniciar Sesión"}
           </Button>
         </form>
 
@@ -97,9 +117,12 @@ export default function Login() {
 
         {message && (
           <Typography
-            mt={2}
+            mt={3}
             align="center"
-            sx={{ color: message.includes(":)") ? "green" : "red" }}
+            sx={{
+              color: message.includes("¡") ? "green" : "red",
+              fontWeight: 500,
+            }}
           >
             {message}
           </Typography>
@@ -108,3 +131,6 @@ export default function Login() {
     </Container>
   );
 }
+
+
+

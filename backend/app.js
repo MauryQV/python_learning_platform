@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors"; 
 import morgan from "morgan";
 import authRoutes from "./src/routes/auth.route.js";
-import profileRoutes from "./src/routes/profile.route.js"; // 👈 IMPORTA LA NUEVA RUTA
+import profileRoutes from "./src/routes/profile.route.js"; 
 import { errorHandler } from "./src/middleware/error.middleware.js";
 
 dotenv.config();

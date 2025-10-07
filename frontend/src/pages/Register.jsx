@@ -1,11 +1,9 @@
 import { useState } from "react";
-import {
-  Box, Button, Checkbox, Container, FormControlLabel,
-  Grid, IconButton, InputAdornment, Link, TextField, Typography, Paper
-} from "@mui/material";
+import {Box, Button, Checkbox, Container, FormControlLabel, Grid, IconButton, InputAdornment, Link, TextField, Typography, Paper} from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import PasswordStrengthBar from "./PasswordStrengthBar.jsx";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { supabase } from "../lib/supabaseClient";
 
 export default function Register() {
   const nav = useNavigate();
@@ -24,12 +22,12 @@ export default function Register() {
 
   const validate = () => {
     const err = {};
-    if (!form.firstName.trim()) err.firstName = "Required";
-    if (!form.lastName.trim()) err.lastName = "Required";
-    if (!emailValid(form.email)) err.email = "Invalid email";
-    if (!pwValid(form.password)) err.password = "Min 8, upper, lower, number";
-    if (form.password !== form.confirmPassword) err.confirmPassword = "Passwords do not match";
-    if (!form.accepted) err.accepted = "You must accept Terms & Privacy";
+    if (!form.firstName.trim()) err.firstName = "Obligatorio";
+    if (!form.lastName.trim()) err.lastName = "Obligatorio";
+    if (!emailValid(form.email)) err.email = "Email no válido";
+    if (!pwValid(form.password)) err.password = "Min 8, mayúscula, minúscula, número";
+    if (form.password !== form.confirmPassword) err.confirmPassword = "Las contraseñas no coinciden";
+    if (!form.accepted) err.accepted = "Debes aceptar los Términos y Condiciones";
     setErrors(err);
     return Object.keys(err).length === 0;
   };
@@ -39,29 +37,53 @@ export default function Register() {
     setForm((f) => ({ ...f, [k]: v }));
   };
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+
+    try {
+      setSubmitting(true);
+      setErrors((prev) => ({ ...prev, submit: undefined }));
+
+      // ⬇️ Registro directo con Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          data: {
+            firstName: form.firstName,
+            lastName: form.lastName,
+          },
+          emailRedirectTo: `${window.location.origin}/login`, 
+        },
+      });
+
+      if (error) {
+        setErrors((prev) => ({ ...prev, submit: error.message || "No se pudo crear la cuenta" }));
+        return;
+      }
+
       nav("/verify-email");
-    }, 700);
+    } catch (err) {
+      setErrors((prev) => ({ ...prev, submit: "Error inesperado. Intenta de nuevo." }));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <Container maxWidth="sm" sx={{ py: 8 }}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 4 }}>
-        <Typography variant="h4" gutterBottom>Create your account</Typography>
+        <Typography variant="h4" gutterBottom>Crea tu cuenta</Typography>
         <Typography color="text.secondary" sx={{ mb: 3 }}>
-          Start learning Python with interactive modules 
+          Comienza a aprender Python con módulos interactivos
         </Typography>
 
         <Box component="form" noValidate onSubmit={onSubmit}>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <TextField
-                label="First name"
+                label="Nombre"
                 fullWidth
                 value={form.firstName}
                 onChange={onChange("firstName")}
@@ -72,7 +94,7 @@ export default function Register() {
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
-                label="Last name"
+                label="Apellidos"
                 fullWidth
                 value={form.lastName}
                 onChange={onChange("lastName")}
@@ -98,17 +120,17 @@ export default function Register() {
             <Grid item xs={12}>
               <TextField
                 type={showPw ? "text" : "password"}
-                label="Password"
+                label="Contraseña"
                 fullWidth
                 value={form.password}
                 onChange={onChange("password")}
                 error={!!errors.password}
-                helperText={errors.password || "Use at least 8 chars with upper/lower/number"}
+                helperText={errors.password || "Ingresa al menos 8 caracteres, mayúscula, minúscula y un número"}
                 autoComplete="new-password"
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton onClick={() => setShowPw(s => !s)} edge="end">
+                      <IconButton onClick={() => setShowPw(s => !s)} edge="end" aria-label="toggle password visibility">
                         {showPw ? <VisibilityOff/> : <Visibility/>}
                       </IconButton>
                     </InputAdornment>
@@ -121,7 +143,7 @@ export default function Register() {
             <Grid item xs={12}>
               <TextField
                 type={showPw2 ? "text" : "password"}
-                label="Confirm password"
+                label="Confirma contraseña"
                 fullWidth
                 value={form.confirmPassword}
                 onChange={onChange("confirmPassword")}
@@ -131,7 +153,7 @@ export default function Register() {
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton onClick={() => setShowPw2(s => !s)} edge="end">
+                      <IconButton onClick={() => setShowPw2(s => !s)} edge="end" aria-label="toggle confirm password visibility">
                         {showPw2 ? <VisibilityOff/> : <Visibility/>}
                       </IconButton>
                     </InputAdornment>
@@ -147,7 +169,7 @@ export default function Register() {
                 }
                 label={
                   <Typography variant="body2">
-                    Acepto <Link href="#">Terms</Link> & <Link href="#">Privacy Policy</Link>.
+                    Acepto los <Link href="#">Términos</Link> & <Link href="#">Política de Privacidad</Link>.
                   </Typography>
                 }
               />
@@ -156,18 +178,27 @@ export default function Register() {
               )}
             </Grid>
 
+            {errors.submit && (
+              <Grid item xs={12}>
+                <Typography color="error" variant="body2">{errors.submit}</Typography>
+              </Grid>
+            )}
+
             <Grid item xs={12}>
               <Button
                 fullWidth type="submit" variant="contained" size="large"
                 disabled={submitting}
               >
-                {submitting ? "Creating..." : "Create account"}
+                {submitting ? "Creando..." : "Crear cuenta"}
               </Button>
             </Grid>
 
             <Grid item xs={12}>
               <Typography variant="body2" color="text.secondary">
-                Ya tienes cuenta? <Link href="#">Sign in</Link>
+                ¿Ya tienes cuenta?{" "}
+                <Link component={RouterLink} to="/login">
+                  Inicia Sesión
+                </Link>
               </Typography>
             </Grid>
           </Grid>

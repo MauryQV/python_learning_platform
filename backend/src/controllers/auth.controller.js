@@ -2,8 +2,8 @@ import { registerUserService, loginUserService } from "../services/auth.service.
 
 export const registerUserController = async (req, res) => {
   try {
-    const { firstName , lastName, email, password } = req.body;
-    const user = await registerUserService({ firstName, lastName, email, password });
+    const { firstName , lastName, email, password, confirmPassword } = req.body;
+    const user = await registerUserService({ firstName, lastName, email, password, confirmPassword });
     res.status(201).json({
        message: "User created successfully",
        user });

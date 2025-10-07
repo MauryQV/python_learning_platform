@@ -10,6 +10,7 @@ const registerSchema = Joi.object({
   lastName: Joi.string().min(2).max(50).required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
+  confirmPassword: Joi.string().valid(Joi.ref('password')).required().messages({'any.only': 'Passwords do not match'}),
 });
 
 // Esquema de validación para login

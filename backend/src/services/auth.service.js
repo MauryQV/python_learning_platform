@@ -4,11 +4,11 @@ import userRepository from "../repositories/user.repository.js";
 import tokenService from "./token.service.js";
 
 class AuthService {
-  async register({ firstName, lastName, email, password }) {
+  async register({ firstName, lastName, email, password}) {
     // Verificar si el usuario ya existe
     const existingUser = await userRepository.findByEmail(email);
     if (existingUser) {
-      const error = new Error("El email ya está registrado");
+      const error = new Error("The email is already registered");
       error.statusCode = 409;
       throw error;
     }
@@ -37,7 +37,7 @@ class AuthService {
     const user = await userRepository.findByEmail(email);
 
     if (!user) {
-      const error = new Error("Credenciales incorrectas");
+      const error = new Error("Incorrect credentials");
       error.statusCode = 401;
       throw error;
     }
@@ -45,7 +45,7 @@ class AuthService {
     // Validar contraseña
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
-      const error = new Error("Credenciales incorrectas");
+      const error = new Error("Incorrect credentials");
       error.statusCode = 401;
       throw error;
     }
@@ -62,7 +62,7 @@ class AuthService {
   async verifyUser(userId) {
     const user = await userRepository.findById(userId);
     if (!user) {
-      const error = new Error("Usuario no encontrado");
+      const error = new Error("User not found");
       error.statusCode = 404;
       throw error;
     }

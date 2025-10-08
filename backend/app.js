@@ -1,8 +1,9 @@
 import express from "express";
 import dotenv from "dotenv";
-import cors from "cors"; 
+import cors from "cors";
 import morgan from "morgan";
 import authRoutes from "./src/routes/auth.route.js";
+import profileRoutes from "./src/routes/profile.route.js"; 
 import { errorHandler } from "./src/middleware/error.middleware.js";
 
 dotenv.config();
@@ -36,10 +37,11 @@ app.use(express.json());
 app.options(/.*/, cors());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/profile", profileRoutes); 
+
 
 app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-

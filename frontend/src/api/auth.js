@@ -1,30 +1,24 @@
-import axios from "axios";
+import { api } from "../api/axiosInstance.js"
 
-const API_URL = "http://localhost:2999/api/auth"; 
 
 export const loginUser = async (email, password) => {
   try {
-    const response = await axios.post(
-      `${API_URL}/login`,
-      { email, password },
-      { headers: { "Content-Type": "application/json" } } 
-    );
+    const response = await api.post("/auth/login", { email, password });
     return response.data;
   } catch (error) {
-    throw error.response?.data || { error: "Error al iniciar sesión" };
+    throw error.response?.data || { error: "Error"  };
   }
 };
 
 export const registerUser = async (firstName, lastName, email, password, confirmPassword) => {
   try {
-    const response = await axios.post(
-      `${API_URL}/register`,
+    const response = await api.post(
+      "/auth/register",
       { firstName, lastName, email, password, confirmPassword },
-      { headers: { "Content-Type": "application/json" } } 
+      { headers: { "Content-Type": "application/json" } }
     );
     return response.data;
   } catch (error) {
     throw error.response?.data || { error: "Error al registrar usuario" };
   }
 };
-

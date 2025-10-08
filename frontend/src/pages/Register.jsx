@@ -1,16 +1,21 @@
 import { useState } from "react";
-import {Box, Button, Checkbox, Container, FormControlLabel, Grid,IconButton, InputAdornment, Link, TextField, Typography, Paper} from "@mui/material";
+import {Box, Button, Checkbox, Container, FormControlLabel, Grid, IconButton, InputAdornment, Link, TextField, Typography, Paper,} from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import PasswordStrengthBar from "./PasswordStrengthBar.jsx";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
-
-import { registerUser } from "../api/auth";
+import { supabase } from "../lib/supabaseClient";             
+import { registerUser } from "../api/auth";                   
 
 export default function Register() {
   const nav = useNavigate();
+
   const [form, setForm] = useState({
-    firstName: "", lastName: "", email: "",
-    password: "", confirmPassword: "", accepted: false
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    accepted: false,
   });
   const [showPw, setShowPw] = useState(false);
   const [showPw2, setShowPw2] = useState(false);
@@ -27,7 +32,8 @@ export default function Register() {
     if (!form.lastName.trim()) err.lastName = "Obligatorio";
     if (!emailValid(form.email)) err.email = "Email no válido";
     if (!pwValid(form.password)) err.password = "Min 8, mayúscula, minúscula, número";
-    if (form.password !== form.confirmPassword) err.confirmPassword = "Las contraseñas no coinciden";
+    if (form.password !== form.confirmPassword)
+      err.confirmPassword = "Las contraseñas no coinciden";
     if (!form.accepted) err.accepted = "Debes aceptar los Términos y Condiciones";
     setErrors(err);
     return Object.keys(err).length === 0;
@@ -51,16 +57,38 @@ export default function Register() {
         form.lastName,
         form.email,
         form.password,
-        form.confirmPassword,
+        form.confirmPassword
       );
 
-      nav("/verify-email");
+      if (!res?.success) {
+        setErrors((prev) => ({
+          ...prev,
+          submit: res?.message || "No se pudo registrar",
+        }));
+        setSubmitting(false);
+        return;
+      }
 
+      const { error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/login`,
+        },
+      });
+
+      if (error) {
+        setErrors((prev) => ({ ...prev, submit: error.message }));
+        setSubmitting(false);
+        return;
+      }
+
+      localStorage.setItem("pendingEmail", form.email);
+
+      nav("/verify-email");
     } catch (err) {
       const msg =
-        err?.message ||
-        err?.error ||
-        "No se pudo crear la cuenta. Intenta de nuevo.";
+        err?.message || err?.error || "No se pudo crear la cuenta. Intenta de nuevo.";
       setErrors((prev) => ({ ...prev, submit: msg }));
     } finally {
       setSubmitting(false);
@@ -70,7 +98,9 @@ export default function Register() {
   return (
     <Container maxWidth="sm" sx={{ py: 8 }}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 4 }}>
-        <Typography variant="h4" gutterBottom>Crea tu cuenta</Typography>
+        <Typography variant="h4" gutterBottom>
+          Crea tu cuenta
+        </Typography>
         <Typography color="text.secondary" sx={{ mb: 3 }}>
           Comienza a aprender Python con módulos interactivos
         </Typography>
@@ -121,16 +151,23 @@ export default function Register() {
                 value={form.password}
                 onChange={onChange("password")}
                 error={!!errors.password}
-                helperText={errors.password || "Ingresa al menos 8 caracteres, mayúscula, minúscula y un número"}
+                helperText={
+                  errors.password ||
+                  "Ingresa al menos 8 caracteres, mayúscula, minúscula y un número"
+                }
                 autoComplete="new-password"
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton onClick={() => setShowPw(s => !s)} edge="end" aria-label="toggle password visibility">
-                        {showPw ? <VisibilityOff/> : <Visibility/>}
+                      <IconButton
+                        onClick={() => setShowPw((s) => !s)}
+                        edge="end"
+                        aria-label="toggle password visibility"
+                      >
+                        {showPw ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
-                  )
+                  ),
                 }}
               />
               <PasswordStrengthBar password={form.password} />
@@ -149,11 +186,15 @@ export default function Register() {
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton onClick={() => setShowPw2(s => !s)} edge="end" aria-label="toggle confirm password visibility">
-                        {showPw2 ? <VisibilityOff/> : <Visibility/>}
+                      <IconButton
+                        onClick={() => setShowPw2((s) => !s)}
+                        edge="end"
+                        aria-label="toggle confirm password visibility"
+                      >
+                        {showPw2 ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
-                  )
+                  ),
                 }}
               />
             </Grid>
@@ -161,28 +202,39 @@ export default function Register() {
             <Grid item xs={12}>
               <FormControlLabel
                 control={
-                  <Checkbox checked={form.accepted} onChange={onChange("accepted")} />
+                  <Checkbox
+                    checked={form.accepted}
+                    onChange={onChange("accepted")}
+                  />
                 }
                 label={
                   <Typography variant="body2">
-                    Acepto los <Link href="#">Términos</Link> & <Link href="#">Política de Privacidad</Link>.
+                    Acepto los <Link href="#">Términos</Link> &{" "}
+                    <Link href="#">Política de Privacidad</Link>.
                   </Typography>
                 }
               />
               {errors.accepted && (
-                <Typography variant="caption" color="error">{errors.accepted}</Typography>
+                <Typography variant="caption" color="error">
+                  {errors.accepted}
+                </Typography>
               )}
             </Grid>
 
             {errors.submit && (
               <Grid item xs={12}>
-                <Typography color="error" variant="body2">{errors.submit}</Typography>
+                <Typography color="error" variant="body2">
+                  {errors.submit}
+                </Typography>
               </Grid>
             )}
 
             <Grid item xs={12}>
               <Button
-                fullWidth type="submit" variant="contained" size="large"
+                fullWidth
+                type="submit"
+                variant="contained"
+                size="large"
                 disabled={submitting}
               >
                 {submitting ? "Creando..." : "Crear cuenta"}

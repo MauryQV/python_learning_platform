@@ -6,7 +6,7 @@ import Register from "./pages/Register.jsx";
 import VerifyEmail from "./pages/VerifyEmail.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
-import Dashboard from "./pages/Dashboard.jsx"; // Tu página protegida
+import Dashboard from "./pages/Dashboard.jsx"; 
 import "./index.css";
 
 export default function App() {

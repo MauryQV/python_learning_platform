@@ -1,9 +1,10 @@
 import { useState } from "react";
-import {Box, Button, Checkbox, Container, FormControlLabel, Grid, IconButton, InputAdornment, Link, TextField, Typography, Paper} from "@mui/material";
+import {Box, Button, Checkbox, Container, FormControlLabel, Grid,IconButton, InputAdornment, Link, TextField, Typography, Paper} from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import PasswordStrengthBar from "./PasswordStrengthBar.jsx";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
-import { supabase } from "../lib/supabaseClient";
+
+import { registerUser } from "../api/auth";
 
 export default function Register() {
   const nav = useNavigate();
@@ -45,27 +46,22 @@ export default function Register() {
       setSubmitting(true);
       setErrors((prev) => ({ ...prev, submit: undefined }));
 
-      // ⬇️ Registro directo con Supabase
-      const { data, error } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
-        options: {
-          data: {
-            firstName: form.firstName,
-            lastName: form.lastName,
-          },
-          emailRedirectTo: `${window.location.origin}/login`, 
-        },
-      });
-
-      if (error) {
-        setErrors((prev) => ({ ...prev, submit: error.message || "No se pudo crear la cuenta" }));
-        return;
-      }
+      const res = await registerUser(
+        form.firstName,
+        form.lastName,
+        form.email,
+        form.password,
+        form.confirmPassword,
+      );
 
       nav("/verify-email");
+
     } catch (err) {
-      setErrors((prev) => ({ ...prev, submit: "Error inesperado. Intenta de nuevo." }));
+      const msg =
+        err?.message ||
+        err?.error ||
+        "No se pudo crear la cuenta. Intenta de nuevo.";
+      setErrors((prev) => ({ ...prev, submit: msg }));
     } finally {
       setSubmitting(false);
     }

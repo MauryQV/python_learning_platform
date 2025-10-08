@@ -1,4 +1,5 @@
-import api from "../api/axiosInstance.js"
+import { api } from "../api/axiosInstance.js"
+
 
 export const loginUser = async (email, password) => {
   try {
@@ -9,17 +10,15 @@ export const loginUser = async (email, password) => {
   }
 };
 
-export const registerUser = async (firstName, lastName, email, password) => {
+export const registerUser = async (firstName, lastName, email, password, confirmPassword) => {
   try {
-    const response = await api.post("/auth/register", {
-      firstName,
-      lastName,
-      email,
-      password,
-      //hay que añadir confirmPassworf
-    });
+    const response = await api.post(
+      "/auth/register",
+      { firstName, lastName, email, password, confirmPassword },
+      { headers: { "Content-Type": "application/json" } }
+    );
     return response.data;
   } catch (error) {
-    throw error.response?.data || { error: "Error" };
+    throw error.response?.data || { error: "Error al registrar usuario" };
   }
 };

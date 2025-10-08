@@ -17,7 +17,7 @@ export default function ResetPassword() {
 
     const { error } = await supabase.auth.updateUser({ password });
     if (error) setMessage(error.message);
-    else setMessage("Contraseña actualizada correctamente");
+    else setMessage("Contraseña actualizada exitosamente");
     setLoading(false);
   };
 

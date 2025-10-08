@@ -9,19 +9,32 @@ import { errorHandler } from "./src/middleware/error.middleware.js";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 2999;
+const allowedOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
 
 app.use(morgan("dev"));
+app.use(cors({
+  origin: process.env.ORIGIN,
+  credentials: true,               
+}));
 
-// CORS
 app.use(
   cors({
-    origin: process.env.ORIGIN,
-    credentials: true,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: false, 
   })
 );
 
 app.use(express.json());
+
+app.options(/.*/, cors());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes); 

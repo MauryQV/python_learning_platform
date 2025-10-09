@@ -1,5 +1,5 @@
 // src/repositories/user.repository.js
-import prisma from "../../config/prismaClient.js";
+import prisma from "../../../config/prismaClient.js";
 
 class UserRepository {
   async findByEmail(email) {

@@ -8,26 +8,28 @@ datasource db {
 }
 
 model User {
-  userId       Int             @id @default(autoincrement())
-  firstName    String
-  lastName     String
-  email        String          @unique
-  passwordHash String
-  registeredAt DateTime        @default(now())
-  status       String          @default("active")
-  attempts     Attempt[]
-  diagnostics  Diagnostic[]
-  enrollments  Enrollment[]
-  submissions  Submission[]
-  progresses   TopicProgress[]
-  roles        UserRole[]
+  userId         Int              @id @default(autoincrement())
+  firstName      String
+  lastName       String
+  email          String           @unique
+  passwordHash   String
+  registeredAt   DateTime         @default(now())
+  status         String           @default("active")
+  attempts       Attempt[]
+  diagnostics    Diagnostic[]
+  enrollments    Enrollment[]
+  submissions    Submission[]
+  progresses     TopicProgress[]
+  roles          UserRole[]
+  UserPermission UserPermission[]
 }
 
 model Role {
-  roleId      Int        @id @default(autoincrement())
-  name        String
-  description String?
-  users       UserRole[]
+  roleId         Int              @id @default(autoincrement())
+  name           String           @unique
+  description    String?
+  users          UserRole[]
+  RolePermission RolePermission[]
 }
 
 model UserRole {
@@ -38,6 +40,25 @@ model UserRole {
   user       User     @relation(fields: [userId], references: [userId])
 
   @@id([userId, roleId])
+}
+
+model RolePermission {
+  roleId     Int
+  permission String
+  assignedAt DateTime @default(now())
+  role       Role     @relation(fields: [roleId], references: [roleId])
+
+  @@id([roleId, permission])
+}
+
+model UserPermission {
+  userId     Int
+  permission String
+  assignedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@id([userId, permission])
 }
 
 model Course {

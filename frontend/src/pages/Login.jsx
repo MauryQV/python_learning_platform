@@ -6,33 +6,52 @@ import {
   Typography,
   Box,
   CircularProgress,
+  InputAdornment,
+  IconButton,
 } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setMessage("");
+    setIsSuccess(false);
     setLoading(true);
 
-    const result = await login(email, password);
+    try {
+      const result = await login(email, password);
 
-    if (result.success) {
-      setMessage(`¡Bienvenido, ${result.user.firstName}!`);
-      setTimeout(() => navigate("/dashboard"), 1500);
-    } else {
-      setMessage(result.error);
+      if (result?.success) {
+        setIsSuccess(true);
+        const name = result?.user?.firstName || "de vuelta";
+        setMessage(`¡Bienvenido, ${name}!`);
+        setTimeout(() => navigate("/dashboard"), 1200);
+      } else {
+        setIsSuccess(false);
+        setMessage(result?.error || "No se pudo iniciar sesión.");
+      }
+    } catch (err) {
+      setIsSuccess(false);
+      setMessage(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Error inesperado al iniciar sesión."
+      );
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -62,7 +81,7 @@ export default function Login() {
           Iniciar Sesión
         </Typography>
 
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleLogin} noValidate>
           <TextField
             label="Correo electrónico"
             type="email"
@@ -70,20 +89,48 @@ export default function Login() {
             fullWidth
             margin="normal"
             required
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
 
           <TextField
             label="Contraseña"
-            type="password"
+            type={showPw ? "text" : "password"}
             variant="outlined"
             fullWidth
             margin="normal"
             required
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPw((s) => !s)}
+                    edge="end"
+                    aria-label="toggle password visibility"
+                  >
+                    {showPw ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
+
+          <Typography align="center" fontSize={14} mt={1}>
+            <Link
+              to="/reset-password"
+              style={{
+                color: "#1976d2",
+                textDecoration: "none",
+                fontWeight: "normal",
+              }}
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </Typography>
 
           <Button
             type="submit"
@@ -93,11 +140,7 @@ export default function Login() {
             sx={{ mt: 2, py: 1.2 }}
             disabled={loading}
           >
-            {loading ? (
-              <CircularProgress size={24} sx={{ color: "white" }} />
-            ) : (
-              "Iniciar Sesión"
-            )}
+            {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : "Iniciar Sesión"}
           </Button>
         </form>
 
@@ -119,10 +162,7 @@ export default function Login() {
           <Typography
             mt={3}
             align="center"
-            sx={{
-              color: message.includes("¡") ? "green" : "red",
-              fontWeight: 500,
-            }}
+            sx={{ color: isSuccess ? "green" : "red", fontWeight: 500 }}
           >
             {message}
           </Typography>

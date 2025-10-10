@@ -1,11 +1,11 @@
-// src/services/auth.service.js
+// src/services/auth/auth.service.js
 import bcrypt from "bcrypt";
-import userRepository from "../repositories/user.repository.js";
+import userRepository from "../../repositories/auth/user.repository.js";
 import tokenService from "./token.service.js";
 
 class AuthService {
-  async register({ firstName, lastName, email, password}) {
-    // Verificar si el usuario ya existe
+  // Registro de usuario
+  async register({ firstName, lastName, email, password }) {
     const existingUser = await userRepository.findByEmail(email);
     if (existingUser) {
       const error = new Error("The email is already registered");
@@ -13,7 +13,6 @@ class AuthService {
       throw error;
     }
 
-    // Hashear contraseña
     const passwordHash = await bcrypt.hash(password, 10);
 
     // Crear usuario
@@ -24,25 +23,26 @@ class AuthService {
       lastName,
     });
 
-    // Generar token
-    const token = tokenService.generateToken(newUser);
+    // Traer roles por separado
+    const userWithRoles = await userRepository.findById(newUser.userId);
+
+    const token = tokenService.generateToken(userWithRoles);
 
     return {
       token,
-      user: this._formatUserResponse(newUser),
+      user: this._formatUserResponse(userWithRoles),
     };
   }
 
+  // Login de usuario
   async login(email, password) {
     const user = await userRepository.findByEmail(email);
-
     if (!user) {
       const error = new Error("Incorrect credentials");
       error.statusCode = 401;
       throw error;
     }
 
-    // Validar contraseña
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
       const error = new Error("Incorrect credentials");
@@ -50,7 +50,6 @@ class AuthService {
       throw error;
     }
 
-    // Generar token
     const token = tokenService.generateToken(user);
 
     return {
@@ -59,6 +58,7 @@ class AuthService {
     };
   }
 
+  // Verificar usuario
   async verifyUser(userId) {
     const user = await userRepository.findById(userId);
     if (!user) {
@@ -70,12 +70,26 @@ class AuthService {
     return this._formatUserResponse(user);
   }
 
+  // Actualizar rol del usuario
+  async updateUserRole(userId, newRole) {
+    const user = await userRepository.updateRole(userId, newRole);
+    if (!user) {
+      const error = new Error("User not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    return this._formatUserResponse(user);
+  }
+
+  // Formatear respuesta del usuario
   _formatUserResponse(user) {
     return {
       id: user.userId,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
+      role: user.roles && user.roles.length > 0 ? user.roles[0].role.name : null,
       status: user.status,
       registeredAt: user.registeredAt,
     };
@@ -83,3 +97,4 @@ class AuthService {
 }
 
 export default new AuthService();
+

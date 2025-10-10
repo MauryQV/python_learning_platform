@@ -1,6 +1,3 @@
-// ============================================
-// 3. components/ProtectedRoute.jsx - NUEVO
-// ============================================
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { CircularProgress, Box } from "@mui/material";

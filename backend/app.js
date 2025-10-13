@@ -43,7 +43,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
 
 // RUTA ADMIN
-app.use("/admin", adminRoutes);  // << esta línea permite PATCH /admin/users/:id/role
+app.use("/api/admin", adminRoutes); 
 
 // Middleware de errores
 app.use(errorHandler);

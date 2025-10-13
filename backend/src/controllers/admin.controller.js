@@ -1,5 +1,6 @@
-import { updateUserRoleService } from "../services/auth/admin.service.js";
+import { updateUserRoleService, updateUserStatusService } from "../services/auth/admin.service.js";
 
+// PATCH /admin/users/:id/role
 export const updateUserRole = async (req, res) => {
   try {
     const { id } = req.params;
@@ -22,5 +23,32 @@ export const updateUserRole = async (req, res) => {
     });
   }
 };
+
+// PATCH /admin/users/:id/status
+export const updateUserStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; // valores esperados: "active" o "blocked"
+
+    if (!["active", "blocked"].includes(status)) {
+      return res.status(400).json({
+        message: "El estado debe ser 'active' o 'blocked'.",
+      });
+    }
+
+    const updated = await updateUserStatusService(parseInt(id), status);
+
+    return res.status(200).json({
+      message: `Estado del usuario actualizado a '${status}' exitosamente.`,
+      updated,
+    });
+  } catch (error) {
+    console.error("Error al actualizar el estado del usuario:", error);
+    return res.status(500).json({
+      message: error.message || "Error interno del servidor.",
+    });
+  }
+};
+
 
 

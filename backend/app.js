@@ -45,7 +45,8 @@ app.options(/.*/, cors());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
-app.use("/admin", adminRoutes);
+
+app.use("/api/admin", adminRoutes); 
 
 app.use(errorHandler);
 

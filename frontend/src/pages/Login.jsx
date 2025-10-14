@@ -54,6 +54,13 @@ export default function Login() {
     }
   };
 
+  const handleGoogleLogin = () => {
+    // Lógica para iniciar sesión con Google
+  };
+
+  const handleMicrosoftLogin = () => {
+    // Lógica para iniciar sesión con Microsoft
+  };
   return (
     <Container
       maxWidth={false}
@@ -118,7 +125,7 @@ export default function Login() {
               ),
             }}
           />
-
+          
           <Typography align="center" fontSize={14} mt={1}>
             <Link
               to="/reset-password"
@@ -143,7 +150,22 @@ export default function Login() {
             {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : "Iniciar Sesión"}
           </Button>
         </form>
-
+         <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between' }}>
+          <Button
+            variant="outlined"
+            onClick={handleGoogleLogin}
+            sx={{ flex: 1, marginRight: 1 }}
+          >
+            Continuar con Google
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={handleMicrosoftLogin}
+            sx={{ flex: 1, marginLeft: 1 }}
+          >
+            Continuar con Microsoft
+          </Button>
+        </Box>
         <Typography mt={2} align="center" fontSize={14}>
           ¿No tienes cuenta?{" "}
           <Link

@@ -22,6 +22,9 @@ model User {
   progresses     TopicProgress[]
   roles          UserRole[]
   UserPermission UserPermission[]
+  isVerified          Boolean                    @default(false)
+  emailVerifiedAt     DateTime?
+  verificationTokens  EmailVerificationToken[]
 }
 
 model Role {
@@ -171,4 +174,18 @@ model Diagnostic {
   recommendedLevel String?
   course           Course   @relation(fields: [courseId], references: [courseId])
   user             User     @relation(fields: [userId], references: [userId])
+}
+
+model EmailVerificationToken {
+  tokenId    Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  tokenHash  String
+  expiresAt  DateTime
+  used       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([userId, used, expiresAt])
 }

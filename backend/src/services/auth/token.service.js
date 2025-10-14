@@ -6,9 +6,12 @@ class TokenService {
   generateToken(user) {
     return jwt.sign(
       {
-        userId: user.userId,
+        id: user.userId,
         email: user.email,
-        role: user.roles && user.roles.length > 0 ? user.roles[0].role.name : null,
+        role:
+          user.roles && user.roles.length > 0
+            ? user.roles[0].role.name
+            : null,
       },
       SECRET,
       { expiresIn: "1h" }
@@ -21,4 +24,3 @@ class TokenService {
 }
 
 export default new TokenService();
-

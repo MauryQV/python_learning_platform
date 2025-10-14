@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import dotenv from "dotenv";
-import adminRoutes from "./src/routes/admin.routes.js";
+import adminRoutes from "./src/routes/admin.route.js";
 import authRoutes from "./src/routes/auth.route.js";
 import profileRoutes from "./src/routes/profile.route.js";
 import { errorHandler } from "./src/middleware/error.middleware.js";
@@ -40,18 +40,22 @@ app.use(
   })
 );
 
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok",
+     timestamp: new Date().toISOString(),
+    message: "Server is healthy" });
+});
+
 app.use(express.json());
-app.options(/.*/, cors());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
-
 app.use("/api/admin", adminRoutes); 
 
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  console.log(`🚀 API running on http://localhost:${PORT}`);
+  console.log(` emoji de cohetecito running on http://localhost:${PORT}`);
 });
 
 export default app;

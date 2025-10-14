@@ -52,6 +52,26 @@ class UserRepository {
 
     return this.findById(userId);
   }
+
+async createUserWithGoogle({ email, googleId, name, picture }) {
+  const [firstName, ...lastNameParts] = name.split(" ");
+  const lastName = lastNameParts.join(" ");
+
+  return await prisma.user.create({
+    data: {
+      email,
+      googleId,
+      firstName,
+      lastName,
+      profileImage: picture,
+      isVerified: true,
+      passwordHash: null, 
+    },
+    include: { roles: true },
+  });
+}
+
+
 }
 
 export default new UserRepository();

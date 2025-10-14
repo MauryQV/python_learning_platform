@@ -1,8 +1,7 @@
-// src/controllers/admin.controller.js
 import nodemailer from "nodemailer";
 import prisma from "../../config/prismaClient.js";
 import { updateUserRoleService, updateUserStatusService,} from "../services/auth/admin.service.js";
-import {generateRandomToken, hashToken, minutesFromNow,} from "../services/auth/verificationToken.util.js";
+//import {generateRandomToken, hashToken, minutesFromNow,} from "../../services/auth/verificationToken.util.js";
 import { sendVerificationEmail } from "../services/auth/mail.service.js";
 
 const { VERIFY_TOKEN_TTL_MIN, FRONTEND_URL } = process.env;

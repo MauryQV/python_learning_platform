@@ -1,17 +1,14 @@
+// src/services/auth/auth.service.js
 import bcrypt from "bcrypt";
-import prisma from "../../../config/prismaClient.js";
+import { OAuth2Client } from "google-auth-library";
 import userRepository from "../../repositories/auth/user.repository.js";
-import tokenService from "./token.service.js";
-import * as tokenModule from "./token.service.js";
+import tokenService from "../../auth/tokenService.js";
+import { verifyGoogleToken } from "../../auth/verifyGoogleToken.js"
 
-function signToken(payload) {
-  if (typeof signJwtNamed === "function") return signJwtNamed(payload);
-  if (typeof tokenService?.signJwt === "function") return tokenService.signJwt(payload);
-  if (typeof tokenService?.generateToken === "function") return tokenService.generateToken(payload);
-  throw new Error("No JWT signer available: expected signJwt or generateToken in token.service.js");
-}
+
 
 class AuthService {
+  
   async register({ firstName, lastName, email, password }) {
     const existingUser = await userRepository.findByEmail(email);
     if (existingUser) {
@@ -30,15 +27,7 @@ class AuthService {
     });
 
     const userWithRoles = await userRepository.findById(newUser.userId);
-
-    const token = signToken({
-      id: userWithRoles.userId,
-      email: userWithRoles.email,
-      role:
-        userWithRoles.roles && userWithRoles.roles.length > 0
-          ? userWithRoles.roles[0].role.name?.toLowerCase?.() ?? "user"
-          : "user",
-    });
+    const token = tokenService.generateToken(userWithRoles);
 
     return {
       token,
@@ -46,6 +35,7 @@ class AuthService {
     };
   }
 
+  // Login clásico con email/password
   async login(email, password) {
     const user = await userRepository.findByEmail(email);
     if (!user) {
@@ -61,16 +51,7 @@ class AuthService {
       throw error;
     }
 
-    const role =
-      user.roles && user.roles.length > 0
-        ? user.roles[0].role.name?.toLowerCase?.() ?? "user"
-        : "user";
-
-    const token = signToken({
-      id: user.userId, 
-      email: user.email,
-      role,
-    });
+    const token = tokenService.generateToken(user);
 
     return {
       token,
@@ -78,6 +59,45 @@ class AuthService {
     };
   }
 
+  
+ async loginWithGoogle(idToken) {
+  const { email, googleId } = await verifyGoogleToken(idToken);
+
+  const user = await userRepository.findByEmail(email);
+  if (!user) {
+    throw new Error("User not found. Please register first.");
+  }
+
+  // Validar que la cuenta está vinculada con Google
+  if (!user.googleId || user.googleId !== googleId) {
+    throw new Error("This email is registered with a different method. Please use the correct login.");
+  }
+
+  const token = tokenService.generateToken(user);
+  return { token, user };
+}
+
+async registerWithGoogle(idToken) {
+  const { email, name, picture, googleId } = await verifyGoogleToken(idToken);
+
+  const existing = await userRepository.findByEmail(email);
+  if (existing) {
+    throw new Error("User already registered with this email");
+  }
+
+  const user = await userRepository.createUserWithGoogle({ 
+    email, 
+    googleId,
+    name, 
+    picture 
+  });
+
+  const token = tokenService.generateToken(user);
+  return { token, user };
+}
+
+
+  // Verificar usuario
   async verifyUser(userId) {
     const user = await userRepository.findById(userId);
     if (!user) {
@@ -110,42 +130,9 @@ class AuthService {
         user.roles && user.roles.length > 0 ? user.roles[0].role.name : null,
       status: user.status,
       registeredAt: user.registeredAt,
+      isVerified: user.isVerified,
     };
   }
 }
 
 export default new AuthService();
-
-export async function loginService(email, password) {
-  const user = await prisma.user.findUnique({
-    where: { email },
-    include: {
-      roles: { include: { role: true } }, 
-    },
-  });
-
-  if (!user) throw Object.assign(new Error("Credenciales inválidas"), { statusCode: 401 });
-
-  const ok = await bcrypt.compare(password, user.passwordHash);
-  if (!ok) throw Object.assign(new Error("Credenciales inválidas"), { statusCode: 401 });
-
-  const role = user.roles?.[0]?.role?.name?.toLowerCase?.() || "user";
-
-  const token = signToken({
-    id: user.userId,
-    email: user.email,
-    role,
-  });
-
-  return {
-    token,
-    user: {
-      id: user.userId,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role,
-      status: user.status,
-    },
-  };
-}

@@ -1,3 +1,4 @@
+// src/context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 
@@ -16,55 +17,36 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Configurar axios para incluir el token en todas las peticiones
+  // Al cargar, revisamos si hay token guardado
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
+    const savedUser = localStorage.getItem("user");
 
-    if (savedToken) {
+    if (savedToken && savedUser) {
       setToken(savedToken);
+      setUser(JSON.parse(savedUser));
       axios.defaults.headers.common["Authorization"] = `Bearer ${savedToken}`;
-      // Opcional: verificar si el token es válido
-      verifyToken(savedToken);
-    } else {
-      setLoading(false);
     }
+    setLoading(false);
   }, []);
-
-  // Verificar token al cargar la app
-  const verifyToken = async (tkn) => {
-    try {
-      const response = await axios.get(
-        "http://localhost:2999/api/auth/verify",
-        {
-          headers: { Authorization: `Bearer ${tkn}` },
-        }
-      );
-
-      if (response.data.user) {
-        setUser(response.data.user);
-      }
-    } catch (error) {
-      console.error("Token inválido:", error);
-      logout();
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Login
   const login = async (email, password) => {
     try {
-      const response = await axios.post(
-        "http://localhost:2999/api/auth/login",
-        { email, password }
-      );
+      const response = await axios.post("http://localhost:2999/api/auth/login", {
+        email,
+        password,
+      });
 
       if (response.data.token) {
         const { token: newToken, user: userData } = response.data;
 
         setToken(newToken);
         setUser(userData);
+
         localStorage.setItem("token", newToken);
+        localStorage.setItem("user", JSON.stringify(userData));
+
         axios.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
 
         return { success: true, user: userData };
@@ -82,10 +64,11 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setUser(null);
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     delete axios.defaults.headers.common["Authorization"];
   };
 
-  // Interceptor para manejar errores 401 (token expirado)
+  // Interceptor global para manejar token expirado
   useEffect(() => {
     const interceptor = axios.interceptors.response.use(
       (response) => response,

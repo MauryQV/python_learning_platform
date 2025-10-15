@@ -37,5 +37,3 @@ coverage/
 *.bak
 *~
 
-package.json
-package-lock.json

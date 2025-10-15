@@ -1,98 +1,116 @@
-// src/context/AuthContext.jsx
-import { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { api } from "../api/axiosInstance.js";
+import {
+  loginUser as apiLoginUser,
+  loginWithGoogle as apiLoginWithGoogle,
+} from "../api/auth";
 
-const AuthContext = createContext({});
+const AuthContext = createContext(null);
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth debe usarse dentro de AuthProvider");
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth debe usarse dentro de AuthProvider");
+  return ctx;
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem("user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+  const [token, setToken] = useState(() => localStorage.getItem("token"));
   const [loading, setLoading] = useState(true);
 
-  // Al cargar, revisamos si hay token guardado
   useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    const savedUser = localStorage.getItem("user");
-
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-      axios.defaults.headers.common["Authorization"] = `Bearer ${savedToken}`;
+    if (token) {
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     }
     setLoading(false);
-  }, []);
+  }, [token]);
 
-  // Login
   const login = async (email, password) => {
     try {
-      const response = await axios.post("http://localhost:2999/api/auth/login", {
-        email,
-        password,
-      });
-
-      if (response.data.token) {
-        const { token: newToken, user: userData } = response.data;
+      const res = await apiLoginUser(email, password);
+      if (res?.token) {
+        const { token: newToken, user: userData } = res;
 
         setToken(newToken);
         setUser(userData);
 
         localStorage.setItem("token", newToken);
-        localStorage.setItem("user", JSON.stringify(userData));
+        if (userData) localStorage.setItem("user", JSON.stringify(userData));
 
-        axios.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+        api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
 
         return { success: true, user: userData };
       }
+      return { success: false, error: res?.message || "No se pudo iniciar sesión" };
     } catch (error) {
       return {
         success: false,
-        error: error.response?.data?.message || "Error al iniciar sesión",
+        error: error?.message || "Error al iniciar sesión",
       };
     }
   };
 
-  // Logout
+  const loginWithGoogle = async (idToken) => {
+    try {
+      const res = await apiLoginWithGoogle(idToken);
+      if (res?.success && res?.token) {
+        setToken(res.token);
+        if (res.user) setUser(res.user);
+
+        localStorage.setItem("token", res.token);
+        if (res.user) localStorage.setItem("user", JSON.stringify(res.user));
+
+        api.defaults.headers.common["Authorization"] = `Bearer ${res.token}`;
+        return { success: true, user: res.user };
+      }
+      return { success: false, error: res?.message || "No se pudo iniciar sesión con Google" };
+    } catch (error) {
+      return {
+        success: false,
+        error: error?.message || "Error con Google Login",
+      };
+    }
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    delete axios.defaults.headers.common["Authorization"];
+    delete api.defaults.headers.common["Authorization"];
   };
 
-  // Interceptor global para manejar token expirado
   useEffect(() => {
-    const interceptor = axios.interceptors.response.use(
+    const interceptor = api.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (error.response?.status === 401) {
+        if (error?.response?.status === 401) {
           logout();
         }
         return Promise.reject(error);
       }
     );
-
-    return () => {
-      axios.interceptors.response.eject(interceptor);
-    };
+    return () => api.interceptors.response.eject(interceptor);
   }, []);
 
-  const value = {
-    user,
-    token,
-    login,
-    logout,
-    loading,
-    isAuthenticated: !!user,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        loading,
+        isAuthenticated: !!user,
+        setUser,
+        setToken,
+        login,
+        loginWithGoogle,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };

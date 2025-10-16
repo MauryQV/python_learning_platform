@@ -1,12 +1,13 @@
 import express from "express";
-import { updateUserRole, updateUserStatus} from "../controllers/admin.controller.js";
-import { verifyToken, isAdmin,} from "../middleware/auth/auth.middleware.js";
+import { updateUserRoleController, updateUserStatusController, findAllUsersController} from "../controllers/admin.controller.js";
+import { verifyToken, isAdmin} from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-router.patch("/users/:id/role", verifyToken, isAdmin, updateUserRole);
+router.patch("/users/:id/role", verifyToken, isAdmin, updateUserRoleController);
 
-router.patch("/users/:id/status", verifyToken, isAdmin, updateUserStatus);
-//router.post( "/users/:id/resend-verification", verifyToken, isAdmin, resendVerification);
+router.patch("/users/:id/status", verifyToken, isAdmin, updateUserStatusController);
+
+router.get("/users/", findAllUsersController );
 
 export default router;

@@ -1,4 +1,4 @@
-import tokenService from "../../auth/tokenService.js";
+import tokenService from "../auth/tokenService.js";
 
 /**
  * Middleware principal para verificar el token JWT.

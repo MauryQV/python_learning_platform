@@ -1,4 +1,4 @@
-import prisma from "../../../config/prismaClient.js";
+import prisma from "../../config/prismaClient.js";
 
 class UserRepository {
   // Buscar usuario por email
@@ -36,11 +36,6 @@ class UserRepository {
     return user;
   }
 
-  async create({ email, passwordHash, firstName, lastName }) {
-    return prisma.user.create({
-      data: { email, passwordHash, firstName, lastName },
-    });
-  }
 
   async updateRole(userId, newRoleName) {
     const role = await prisma.role.findUnique({ where: { name: newRoleName } });
@@ -68,6 +63,31 @@ async createUserWithGoogle({ email, googleId, name, picture }) {
       passwordHash: null, 
     },
     include: { roles: true },
+  });
+}
+
+
+async createWithDefaultRole({ email, passwordHash, firstName, lastName }) {
+  const DEFAULT_ROLE_ID = 3; 
+
+  // Crear el usuario y asignarle el rol por defecto en una sola transacción
+  return await prisma.user.create({
+    data: {
+      email,
+      passwordHash,
+      firstName,
+      lastName,
+      roles: {
+        create: {
+          roleId: DEFAULT_ROLE_ID,
+        },
+      },
+    },
+    include: {
+      roles: {
+        include: { role: true },
+      },
+    },
   });
 }
 

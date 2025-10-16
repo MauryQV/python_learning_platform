@@ -1,6 +1,24 @@
 import { useEffect, useState } from "react";
-import {Box,Container,Typography,Paper,Table,TableBody,TableCell,TableContainer,TableHead,TableRow,IconButton,Button,Chip,CircularProgress,} from "@mui/material";
-import { Refresh as RefreshIcon, Logout as LogoutIcon } from "@mui/icons-material";
+import {
+  Box,
+  Container,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Button,
+  Chip,
+  CircularProgress,
+} from "@mui/material";
+import {
+  Refresh as RefreshIcon,
+  Logout as LogoutIcon,
+} from "@mui/icons-material";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -126,12 +144,24 @@ export default function AdminDashboard() {
               <Table>
                 <TableHead sx={{ bgcolor: "#f9f9f9" }}>
                   <TableRow>
-                    <TableCell><strong>ID</strong></TableCell>
-                    <TableCell><strong>Nombre</strong></TableCell>
-                    <TableCell><strong>Email</strong></TableCell>
-                    <TableCell><strong>Rol</strong></TableCell>
-                    <TableCell><strong>Estado</strong></TableCell>
-                    <TableCell align="center"><strong>Acciones</strong></TableCell>
+                    <TableCell>
+                      <strong>ID</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Nombre</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Email</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Rol</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Estado</strong>
+                    </TableCell>
+                    <TableCell align="center">
+                      <strong>Acciones</strong>
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -154,9 +184,7 @@ export default function AdminDashboard() {
                         <TableCell>
                           <Chip
                             label={
-                              user.status === "active"
-                                ? "Activo"
-                                : "Bloqueado"
+                              user.status === "active" ? "Activo" : "Bloqueado"
                             }
                             color={
                               user.status === "active" ? "success" : "error"
@@ -179,13 +207,9 @@ export default function AdminDashboard() {
                             color={
                               user.status === "active" ? "error" : "success"
                             }
-                            onClick={() =>
-                              toggleStatus(user.id, user.status)
-                            }
+                            onClick={() => toggleStatus(user.id, user.status)}
                           >
-                            {user.status === "active"
-                              ? "Bloquear"
-                              : "Activar"}
+                            {user.status === "active" ? "Bloquear" : "Activar"}
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -206,4 +230,3 @@ export default function AdminDashboard() {
     </Box>
   );
 }
-

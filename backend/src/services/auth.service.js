@@ -1,39 +1,37 @@
 // src/services/auth/auth.service.js
 import bcrypt from "bcrypt";
-import { OAuth2Client } from "google-auth-library";
-import userRepository from "../../repositories/auth/user.repository.js";
-import tokenService from "../../auth/tokenService.js";
-import { verifyGoogleToken } from "../../auth/verifyGoogleToken.js"
-
+import userRepository from "../repositories/user.repository.js";
+import tokenService from "../auth/tokenService.js";
+import { verifyGoogleToken } from "../auth/verifyGoogleToken.js"
 
 
 class AuthService {
   
-  async register({ firstName, lastName, email, password }) {
-    const existingUser = await userRepository.findByEmail(email);
-    if (existingUser) {
-      const error = new Error("The email is already registered");
-      error.statusCode = 409;
-      throw error;
-    }
-
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    const newUser = await userRepository.create({
-      email,
-      passwordHash,
-      firstName,
-      lastName,
-    });
-
-    const userWithRoles = await userRepository.findById(newUser.userId);
-    const token = tokenService.generateToken(userWithRoles);
-
-    return {
-      token,
-      user: this._formatUserResponse(userWithRoles),
-    };
+async register({ firstName, lastName, email, password }) {
+  const existingUser = await userRepository.findByEmail(email);
+  if (existingUser) {
+    const error = new Error("The email is already registered");
+    error.statusCode = 409;
+    throw error;
   }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  const newUser = await userRepository.createWithDefaultRole({
+    email,
+    passwordHash,
+    firstName,
+    lastName,
+  });
+
+  const token = tokenService.generateToken(newUser);
+
+  return {
+    token,
+    user: this._formatUserResponse(newUser),
+  };
+}
+
 
   // Login clásico con email/password
   async login(email, password) {

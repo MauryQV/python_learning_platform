@@ -1,4 +1,4 @@
-import prisma from "../../../config/prismaClient.js";
+import prisma from "../../config/prismaClient.js";
 
 /**
  * Actualiza o asigna un rol a un usuario y devuelve el usuario con el rol.
@@ -101,4 +101,38 @@ export const updateUserStatusRepository = async (userId, status) => {
     status: updatedUser.status,
     registeredAt: updatedUser.registeredAt,
   };
+};
+
+export const findAllUsers = async () => {
+  const users = await prisma.user.findMany({
+    where: {
+      // Filtra usuarios que NO tengan relación con el rol "admin"
+      roles: {
+        none: {
+          role: {
+            name: "admin",
+          },
+        },
+      },
+    },
+    include: {
+      roles: {
+        include: {
+          role: true,
+        },
+      },
+    },
+    orderBy: {
+      userId: "asc",
+    },
+  });
+
+  // Mapeo para simplificar respuesta
+  return users.map(u => ({
+    id: u.userId,
+    firstName: `${u.firstName} ${u.lastName}`,
+    email: u.email,
+    role: u.roles.length > 0 ? u.roles[0].role.name : "Sin rol",
+    estatus: u.status,
+  }));
 };

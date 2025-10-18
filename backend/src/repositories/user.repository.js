@@ -1,54 +1,57 @@
 import prisma from "../../config/prismaClient.js";
 
-class UserRepository {
-  // Buscar usuario por email
-  async findByEmail(email) {
-    const user = await prisma.user.findUnique({
-      where: { email }, // SIN include de roles
-    });
+// Buscar usuario por email
+export const findByEmail = async (email) => {
+  const user = await prisma.user.findUnique({
+    where: { email }, // SIN include de roles
+  });
 
-    if (!user) return null;
+  if (!user) return null;
 
-    // Traer roles separados
-    const userRoles = await prisma.userRole.findMany({
-      where: { userId: user.userId },
-      include: { role: true },
-    });
+  // Traer roles separados
+  const userRoles = await prisma.userRole.findMany({
+    where: { userId: user.userId },
+    include: { role: true },
+  });
 
-    user.roles = userRoles;
-    return user;
-  }
+  user.roles = userRoles;
+  return user;
+};
 
-  // Buscar usuario por ID
-  async findById(userId) {
-    const user = await prisma.user.findUnique({
-      where: { userId }, // SIN include de roles
-    });
+// Buscar usuario por ID
+export const findById = async (userId) => {
+  const user = await prisma.user.findUnique({
+    where: { userId }, // SIN include de roles
+  });
 
-    if (!user) return null;
+  if (!user) return null;
 
-    const userRoles = await prisma.userRole.findMany({
-      where: { userId },
-      include: { role: true },
-    });
+  const userRoles = await prisma.userRole.findMany({
+    where: { userId },
+    include: { role: true },
+  });
 
-    user.roles = userRoles;
-    return user;
-  }
+  user.roles = userRoles;
+  return user;
+};
 
+export const updateRole = async (userId, newRoleName) => {
+  const role = await prisma.role.findUnique({ where: { name: newRoleName } });
+  if (!role) throw new Error(`Role "${newRoleName}" does not exist`);
 
-  async updateRole(userId, newRoleName) {
-    const role = await prisma.role.findUnique({ where: { name: newRoleName } });
-    if (!role) throw new Error(`Role "${newRoleName}" does not exist`);
+  // Reemplazar roles actuales
+  await prisma.userRole.deleteMany({ where: { userId } });
+  await prisma.userRole.create({ data: { userId, roleId: role.roleId } });
 
-    // Reemplazar roles actuales
-    await prisma.userRole.deleteMany({ where: { userId } });
-    await prisma.userRole.create({ data: { userId, roleId: role.roleId } });
+  return this.findById(userId);
+};
 
-    return this.findById(userId);
-  }
-
-async createUserWithGoogle({ email, googleId, name, picture }) {
+export const createUserWithGoogle = async ({
+  email,
+  googleId,
+  name,
+  picture,
+}) => {
   const [firstName, ...lastNameParts] = name.split(" ");
   const lastName = lastNameParts.join(" ");
 
@@ -60,15 +63,19 @@ async createUserWithGoogle({ email, googleId, name, picture }) {
       lastName,
       profileImage: picture,
       isVerified: true,
-      passwordHash: null, 
+      passwordHash: null,
     },
     include: { roles: true },
   });
-}
+};
 
-
-async createWithDefaultRole({ email, passwordHash, firstName, lastName }) {
-  const DEFAULT_ROLE_ID = 3; 
+export const createWithDefaultRole = async ({
+  email,
+  passwordHash,
+  firstName,
+  lastName,
+}) => {
+  const DEFAULT_ROLE_ID = 3;
 
   // Crear el usuario y asignarle el rol por defecto en una sola transacción
   return await prisma.user.create({
@@ -89,9 +96,4 @@ async createWithDefaultRole({ email, passwordHash, firstName, lastName }) {
       },
     },
   });
-}
-
-
-}
-
-export default new UserRepository();
+};

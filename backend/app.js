@@ -12,10 +12,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 2999;
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-];
+const allowedOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
 
 app.use(morgan("dev"));
 
@@ -41,16 +38,18 @@ app.use(
 );
 
 app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok",
-     timestamp: new Date().toISOString(),
-    message: "Server is healthy" });
+  res.status(200).json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    message: "Server is healthy",
+  });
 });
 
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
-app.use("/api/admin", adminRoutes); 
+app.use("/api/admin", adminRoutes);
 
 app.use(errorHandler);
 

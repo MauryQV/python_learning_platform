@@ -1,12 +1,6 @@
 import nodemailer from "nodemailer";
 
-const {
-  SMTP_HOST,
-  SMTP_PORT,
-  SMTP_USER,
-  SMTP_PASS,
-  MAIL_FROM,
-} = process.env;
+const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM } = process.env;
 
 export const transporter = nodemailer.createTransport({
   host: SMTP_HOST,
@@ -20,9 +14,9 @@ export const transporter = nodemailer.createTransport({
 
 /**
  * @param {Object} params
- * @param {string} params.to 
- * @param {string} params.link 
- * @returns {Promise<Object>} 
+ * @param {string} params.to
+ * @param {string} params.link
+ * @returns {Promise<Object>}
  */
 export async function sendVerificationEmail({ to, link }) {
   const info = await transporter.sendMail({

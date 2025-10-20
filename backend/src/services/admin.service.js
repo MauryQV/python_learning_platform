@@ -1,5 +1,9 @@
 // src/services/auth/admin.service.js
-import {updateUserRoleRepository,updateUserStatusRepository,} from "../../repositories/admin/admin.repository.js";
+import {
+  updateUserRoleRepository,
+  updateUserStatusRepository,
+  findAllUsers,
+} from "../repositories/admin.repository.js";
 /**
  * Actualiza o asigna un rol a un usuario.
  * @param {number} userId
@@ -28,4 +32,9 @@ export const updateUserStatusService = async (userId, status) => {
 
   const updatedUser = await updateUserStatusRepository(userId, status);
   return updatedUser;
+};
+
+export const listAllUsersService = async () => {
+  const users = await findAllUsers();
+  return users;
 };

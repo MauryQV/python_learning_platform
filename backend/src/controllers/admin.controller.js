@@ -1,13 +1,8 @@
-import { updateUserRoleService, updateUserStatusService, listAllUsersService} from "../services/admin.service.js";
-
-
-
-
-function toIntId(value) {
-  const n = Number(value);
-  if (!Number.isInteger(n) || n <= 0) return null;
-  return n;
-}
+import {
+  updateUserRoleService,
+  updateUserStatusService,
+  listAllUsersService,
+} from "../services/admin.service.js";
 
 export const updateUserRoleController = async (req, res) => {
   try {
@@ -59,13 +54,11 @@ export const updateUserStatusController = async (req, res) => {
   }
 };
 
-export const findAllUsersController = async(req, res) => {
-    try {
-      const users = await listAllUsersService();
-      res.status(200).json(users);
-    } catch (err) {
-      res.status(400).json({message:"not found"});
-    }
+export const findAllUsersController = async (req, res) => {
+  try {
+    const users = await listAllUsersService();
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(400).json({ message: "not found" });
   }
-
-
+};

@@ -4,7 +4,12 @@ import {
   validateRegister,
   validateLogin,
 } from "../middleware/validation.middleware.js";
-import { registerController, loginController, loginWithGoogleController, registerWithGoogleController } from "../controllers/auth.controller.js";
+import {
+  registerController,
+  loginController,
+  loginWithGoogleController,
+  registerWithGoogleController,
+} from "../controllers/auth.controller.js";
 
 const router = express.Router();
 
@@ -15,9 +20,9 @@ router.post("/register", validateRegister, registerController);
 router.post("/login", validateLogin, loginController);
 
 //loguear usuarios con Google
-router.post("/login/google",loginWithGoogleController);
+router.post("/login/google", loginWithGoogleController);
 
 //registrar usuarios con Google
-router.post("/register/google",registerWithGoogleController);
+router.post("/register/google", registerWithGoogleController);
 
 export default router;

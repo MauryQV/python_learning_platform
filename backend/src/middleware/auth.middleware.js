@@ -6,7 +6,6 @@ import tokenService from "../auth/tokenService.js";
 export const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
-
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({
       success: false,
@@ -17,21 +16,21 @@ export const verifyToken = (req, res, next) => {
   const token = authHeader.split(" ")[1];
 
   try {
- 
     const decoded = tokenService.verifyToken(token);
 
     req.userId = decoded.userId;
     req.user = {
       id: decoded.userId,
       email: decoded.email,
-      role: decoded.role || "user", 
+      role: decoded.role || "user",
     };
 
     next();
   } catch (error) {
     return res.status(401).json({
       success: false,
-      message: error.message === "expired Token" ? "Token expirado" : "Token inválido",
+      message:
+        error.message === "expired Token" ? "Token expirado" : "Token inválido",
     });
   }
 };

@@ -59,6 +59,9 @@ export const findAllUsersController = async (req, res) => {
     const users = await listAllUsersService();
     res.status(200).json(users);
   } catch (error) {
-    res.status(400).json({ message: "not found" });
+    res.status(400).json({
+      message: "not found",
+      error: error.message,
+    });
   }
 };

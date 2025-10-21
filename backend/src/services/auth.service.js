@@ -25,30 +25,43 @@ export const register = async ({ firstName, lastName, email, password }) => {
 
   return {
     token,
-    user: this._formatUserResponse(newUser),
+    user: newUser,
   };
 };
 
 // Login clásico con email/password
-export const login = async (email, password) => {
-  const user = await userRepository.findByEmail(email);
+
+export const login = async (email) => {
+  // Ahora findByEmail ya incluye los roles automáticamente
+  const user = await userRepository.findByEmailWithRoles(email);
+
   if (!user) {
     const error = new Error("Incorrect credentials");
     error.statusCode = 401;
     throw error;
   }
 
-  const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-  if (!isPasswordValid) {
-    const error = new Error("Incorrect credentials");
-    error.statusCode = 401;
-    throw error;
-  }
-
   const token = tokenService.generateToken(user);
+  // Extraer los roles del usuario
+  const userRoles = user.roles.map((ur) => ur.role.name);
+  const primaryRole = userRoles.includes("admin")
+    ? "admin"
+    : userRoles[0] || "user";
+
+  const userData = {
+    userId: user.userId,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    role: primaryRole,
+    roles: userRoles,
+    isVerified: user.isVerified,
+    profileImage: user.profileImage,
+  };
 
   return {
     token,
+    user: userData,
   };
 };
 
@@ -59,7 +72,6 @@ export const loginWithGoogle = async (idToken) => {
   if (!user) {
     throw new Error("User not found. Please register first.");
   }
-
   // Validar que la cuenta está vinculada con Google
   if (!user.googleId || user.googleId !== googleId) {
     throw new Error(

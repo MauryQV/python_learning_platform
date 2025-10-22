@@ -2,8 +2,8 @@ import jwt from "jsonwebtoken";
 
 const SECRET = process.env.JWT_SECRET || "super_secret_key";
 
-
-  export const generateToken = async(user) => {
+class TokenService {
+  generateToken(user) {
     return jwt.sign(
       {
         userId: user.userId,
@@ -18,7 +18,7 @@ const SECRET = process.env.JWT_SECRET || "super_secret_key";
     );
   }
 
-  export const verifyToken = async(token) => {
+  verifyToken(token) {
     try {
       return jwt.verify(token, SECRET);
     } catch (err) {
@@ -26,3 +26,6 @@ const SECRET = process.env.JWT_SECRET || "super_secret_key";
       throw new Error("invalid Token");
     }
   }
+}
+
+export default new TokenService();

@@ -11,6 +11,7 @@ export default defineConfig([
       ecmaVersion: "latest",
       globals: {
         ...globals.node, // entorno Node.js
+        ...globals.jest,
       },
     },
     plugins: {

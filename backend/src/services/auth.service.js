@@ -111,7 +111,7 @@ export const verifyUser = async (userId) => {
     throw error;
   }
 
-  return this._formatUserResponse(user);
+  return user;
 };
 
 export const updateUserRole = async (userId, newRole) => {

@@ -23,4 +23,4 @@ dist-ssr
 *.sln
 *.sw?
 # Ignorar configuración de ESLint
-eslint.config.json
+eslint.config.js

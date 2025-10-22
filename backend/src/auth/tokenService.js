@@ -2,8 +2,8 @@ import jwt from "jsonwebtoken";
 
 const SECRET = process.env.JWT_SECRET || "super_secret_key";
 
-class TokenService {
-  generateToken(user) {
+
+  export const generateToken = async(user) => {
     return jwt.sign(
       {
         userId: user.userId,
@@ -18,7 +18,7 @@ class TokenService {
     );
   }
 
-  verifyToken(token) {
+  export const verifyToken = async(token) => {
     try {
       return jwt.verify(token, SECRET);
     } catch (err) {
@@ -26,6 +26,3 @@ class TokenService {
       throw new Error("invalid Token");
     }
   }
-}
-
-export default new TokenService();

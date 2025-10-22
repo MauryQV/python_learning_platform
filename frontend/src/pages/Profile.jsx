@@ -1,6 +1,6 @@
 // src/pages/Profile.jsx
 import { useEffect, useMemo, useState } from "react";
-import { Avatar, Box, Button, Chip, Container, Divider, Grid, IconButton, LinearProgress, Paper, Stack, TextField, Typography,} from "@mui/material";
+import { Avatar, Box, Button, Chip, Container, Divider, IconButton, LinearProgress, Paper, Stack, TextField, Typography,} from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 

@@ -97,3 +97,16 @@ export const createWithDefaultRole = async ({
     },
   });
 };
+
+export const findByEmailWithRoles = async (email) => {
+  return await prisma.user.findUnique({
+    where: { email },
+    include: {
+      roles: {
+        include: {
+          role: true,
+        },
+      },
+    },
+  });
+};

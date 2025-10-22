@@ -37,8 +37,8 @@ app.use(
   })
 );
 
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ message: 'SRIVEEEE' });
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ message: "SRIVEEEE" });
 });
 
 app.use(express.json());

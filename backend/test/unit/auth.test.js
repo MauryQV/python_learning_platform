@@ -32,13 +32,14 @@ describe("AuthService", () => {
   beforeEach(() => {
     // Obtener referencias a los mocks
     userRepo = require("../../src/repositories/user.repository.js");
-    
+
     // obtenemos el servicio de token
     const tokenServiceModule = require("../../src/auth/tokenService.js");
     tokenService = tokenServiceModule.default;
-    
-    verifyGoogleToken = require("../../src/auth/verifyGoogleToken.js").verifyGoogleToken;
-    
+
+    verifyGoogleToken =
+      require("../../src/auth/verifyGoogleToken.js").verifyGoogleToken;
+
     jest.clearAllMocks();
   });
 
@@ -76,9 +77,9 @@ describe("AuthService", () => {
     });
 
     it("debería lanzar error 409 si el email ya está registrado", async () => {
-      userRepo.findByEmail.mockResolvedValue({ 
-        userId: 1, 
-        email: "test@test.com" 
+      userRepo.findByEmail.mockResolvedValue({
+        userId: 1,
+        email: "test@test.com",
       });
 
       await expect(
@@ -105,9 +106,7 @@ describe("AuthService", () => {
         lastName: "vargas",
         isVerified: true,
         profileImage: null,
-        roles: [
-          { role: { name: "estudiante" } }
-        ],
+        roles: [{ role: { name: "estudiante" } }],
       };
 
       userRepo.findByEmailWithRoles.mockResolvedValue(mockUser);
@@ -115,7 +114,9 @@ describe("AuthService", () => {
 
       const result = await AuthService.login("test@test.com");
 
-      expect(userRepo.findByEmailWithRoles).toHaveBeenCalledWith("test@test.com");
+      expect(userRepo.findByEmailWithRoles).toHaveBeenCalledWith(
+        "test@test.com"
+      );
       expect(tokenService.generateToken).toHaveBeenCalledWith(mockUser);
       expect(result.token).toBe("login-token");
       expect(result.user.email).toBe("test@test.com");
@@ -135,7 +136,7 @@ describe("AuthService", () => {
     });
   });
 
- //login con google, simulado
+  //login con google, simulado
   describe("loginWithGoogle", () => {
     it("debería hacer login con Google correctamente", async () => {
       const mockGoogleData = {
@@ -170,9 +171,9 @@ describe("AuthService", () => {
       });
       userRepo.findByEmail.mockResolvedValue(null);
 
-      await expect(
-        AuthService.loginWithGoogle("fake-token")
-      ).rejects.toThrow("User not found. Please register first.");
+      await expect(AuthService.loginWithGoogle("fake-token")).rejects.toThrow(
+        "User not found. Please register first."
+      );
     });
 
     it("debería lanzar error si el googleId no coincide", async () => {
@@ -180,16 +181,16 @@ describe("AuthService", () => {
         email: "test@test.com",
         googleId: "google-id-diferente",
       });
-      
+
       userRepo.findByEmail.mockResolvedValue({
         userId: 1,
         email: "test@test.com",
         googleId: "google-id-original",
       });
 
-      await expect(
-        AuthService.loginWithGoogle("fake-token")
-      ).rejects.toThrow("This email is registered with a different method");
+      await expect(AuthService.loginWithGoogle("fake-token")).rejects.toThrow(
+        "This email is registered with a different method"
+      );
     });
 
     it("debería lanzar error si el usuario no tiene googleId", async () => {
@@ -197,16 +198,16 @@ describe("AuthService", () => {
         email: "test@test.com",
         googleId: "google-id-123",
       });
-      
+
       userRepo.findByEmail.mockResolvedValue({
         userId: 1,
         email: "test@test.com",
         googleId: null, // Usuario registrado con password
       });
 
-      await expect(
-        AuthService.loginWithGoogle("fake-token")
-      ).rejects.toThrow("This email is registered with a different method");
+      await expect(AuthService.loginWithGoogle("fake-token")).rejects.toThrow(
+        "This email is registered with a different method"
+      );
     });
   });
 
@@ -255,7 +256,7 @@ describe("AuthService", () => {
         name: "Test",
         picture: "url",
       });
-      
+
       userRepo.findByEmail.mockResolvedValue({
         userId: 1,
         email: "existing@test.com",
@@ -289,9 +290,7 @@ describe("AuthService", () => {
     it("debería lanzar error 404 si el usuario no existe", async () => {
       userRepo.findById.mockResolvedValue(null);
 
-      await expect(
-        AuthService.verifyUser(999)
-      ).rejects.toMatchObject({
+      await expect(AuthService.verifyUser(999)).rejects.toMatchObject({
         message: "User not found",
         statusCode: 404,
       });
@@ -318,9 +317,9 @@ describe("AuthService", () => {
     it("debería lanzar error si el usuario no existe", async () => {
       userRepo.updateRole.mockResolvedValue(null);
 
-      await expect(
-        AuthService.updateUserRole(999, "admin")
-      ).rejects.toThrow("User not found");
+      await expect(AuthService.updateUserRole(999, "admin")).rejects.toThrow(
+        "User not found"
+      );
     });
   });
 });

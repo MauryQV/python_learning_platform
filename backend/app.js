@@ -37,14 +37,16 @@ app.use(
   })
 );
 
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ message: 'SRIVEEEE' });
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ message: "SRIVEEEE" });
 });
 
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
+
 app.use("/api/profile", profileRoutes);
+
 app.use("/api/admin", adminRoutes);
 
 app.use(errorHandler);

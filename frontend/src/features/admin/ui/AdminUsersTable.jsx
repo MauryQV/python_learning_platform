@@ -11,14 +11,25 @@ const YELLOW = "#F6D458";
 
 /* ---------- Estado activo (confía en isActive si viene del mapper) ---------- */
 const isUserActive = (user) => {
+  // 1) si el mapper ya te trae isActive, úsalo
   if (typeof user?.isActive === "boolean") return user.isActive;
+
+  // 2) si te trae statusNormalized del mapper
   if (typeof user?.statusNormalized === "string") {
     const s = user.statusNormalized.trim().toLowerCase();
     if (["active", "activo", "enabled", "true"].includes(s)) return true;
     if (["blocked", "bloqueado", "disabled", "inactive", "false"].includes(s)) return false;
   }
+
+  // 3) backend crudo: status "active"/"blocked"
+  if (typeof user?.status === "string") {
+    const s = user.status.trim().toLowerCase();
+    if (s === "active" || s === "activo" || s === "enabled" || s === "true") return true;
+    if (s === "blocked" || s === "bloqueado" || s === "disabled" || s === "inactive" || s === "false") return false;
+  }
+
+  // 4) otros nombres comunes
   const raw =
-    user?.status ??
     user?.accountStatus ??
     user?.active ??
     user?.enabled ??
@@ -64,12 +75,12 @@ const roleColor = (role) => {
       return YELLOW;
     case "teacher":
     case "instructor":
-      return "#B2FF59"; // verde
+      return "#B2FF59";
     case "moderator":
-      return "#80DEEA"; // cian
+      return "#80DEEA";
     case "student":
     case "learner":
-      return "#e0e0e0"; // gris
+      return "#e0e0e0";
     default:
       return "#f1f1f1";
   }
@@ -87,9 +98,9 @@ function AdminUsersTable({
   onRefresh,
   onToggleStatus,     // (id, currentIsActive:boolean)
   onChangeRole,       // (id, nextRole:string)
-  allowedRoles = [],  // llega desde backend
+  allowedRoles = [],
   loadingRoles = false,
-  isUpdatingId = null // opcional: id que está mutando para deshabilitar fila
+  isUpdatingId = null
 }) {
   return (
     <Paper sx={{ p: 3, borderRadius: 3 }}>
@@ -115,7 +126,7 @@ function AdminUsersTable({
                 <TableCell><strong>Nombre</strong></TableCell>
                 <TableCell><strong>Email</strong></TableCell>
                 <TableCell><strong>Roles</strong></TableCell>
-                <TableCell width={260}><strong>Cambiar rol primario</strong></TableCell>
+                <TableCell width={260}><strong>Cambiar rol</strong></TableCell>
                 <TableCell><strong>Estado</strong></TableCell>
                 <TableCell align="center"><strong>Acciones</strong></TableCell>
               </TableRow>
@@ -126,8 +137,7 @@ function AdminUsersTable({
                   const id = user?.userId ?? user?.id ?? user?._id;
                   const roles = getAllRoles(user);
                   const primaryRole = getPrimaryRole(user);
-                  const active = typeof user.isActive === "boolean" ? user.isActive : isUserActive(user);
-
+                  const active = isUserActive(user); // ← siempre booleano real
                   const rowDisabled = isUpdatingId === id;
 
                   return (
@@ -136,7 +146,6 @@ function AdminUsersTable({
                       <TableCell>{displayName(user)}</TableCell>
                       <TableCell>{user.email}</TableCell>
 
-                      {/* Muestra todos los roles como chips */}
                       <TableCell>
                         <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
                           {roles.length > 0 ? (
@@ -153,7 +162,6 @@ function AdminUsersTable({
                         </Box>
                       </TableCell>
 
-                      {/* Select dinámico de backend para cambiar el rol primario */}
                       <TableCell>
                         <FormControl fullWidth size="small" disabled={rowDisabled}>
                           <InputLabel id={`role-select-${id}`}>Rol</InputLabel>
@@ -162,9 +170,7 @@ function AdminUsersTable({
                             label="Rol"
                             value={primaryRole || ""}
                             onChange={(e) => onChangeRole(id, e.target.value)}
-                            disabled={
-                              rowDisabled || loadingRoles || !(allowedRoles?.length)
-                            }
+                            disabled={rowDisabled || loadingRoles || !(allowedRoles?.length)}
                             displayEmpty
                           >
                             {allowedRoles?.length ? (
@@ -195,7 +201,7 @@ function AdminUsersTable({
                           size="small"
                           variant="contained"
                           color={active ? "error" : "success"}
-                          onClick={() => onToggleStatus(id, active)}
+                          onClick={() => onToggleStatus(id, active)} // ← pasa booleano actual
                           disabled={rowDisabled}
                         >
                           {active ? "Bloquear" : "Activar"}

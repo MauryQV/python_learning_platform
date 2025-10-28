@@ -49,7 +49,7 @@ describe("AuthService", () => {
       userRepo.findByEmail.mockResolvedValue(null);
       userRepo.createWithDefaultRole.mockResolvedValue({
         userId: 1,
-        email: "testDeltest@test.com",
+        email: "test@test.com",
         firstName: "juancito",
         lastName: "pinto",
         roles: [{ role: { name: "estudiante" } }],
@@ -58,8 +58,8 @@ describe("AuthService", () => {
       bcrypt.hash.mockResolvedValue("hashed-password");
 
       const result = await AuthService.register({
-        firstName: "Juan",
-        lastName: "Pérez",
+        firstName: "juancito",
+        lastName: "pinto",
         email: "test@test.com",
         password: "123456",
       });
@@ -67,7 +67,7 @@ describe("AuthService", () => {
       expect(userRepo.findByEmail).toHaveBeenCalledWith("test@test.com");
       expect(bcrypt.hash).toHaveBeenCalledWith("123456", 10);
       expect(userRepo.createWithDefaultRole).toHaveBeenCalledWith({
-        email: "testDeltest@test.com",
+        email: "test@test.com",
         passwordHash: "hashed-password",
         firstName: "juancito",
         lastName: "pinto",

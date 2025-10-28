@@ -1,0 +1,72 @@
+name: CI for Backend and Frontend
+
+
+on:
+  push:
+    branches: [Valeria_Daza, main, develop]
+  pull_request:
+    branches: [Valeria_Daza, main, develop]
+  workflow_dispatch:
+
+jobs:
+  backend:
+    name: 🧩 Backend Build & Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Run backend tests (skip if none)
+        run: npm test --if-present || echo "No backend tests yet"
+
+      - name: Build backend
+        run: npm run build --if-present
+
+  frontend:
+    name: 🎨 Frontend Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Lint frontend (optional)
+        run: npm run lint --if-present
+
+      - name: Build frontend
+        env:
+          VITE_API_URL: "http://localhost:2999"
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist

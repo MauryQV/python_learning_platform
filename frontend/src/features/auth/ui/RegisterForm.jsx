@@ -1,3 +1,4 @@
+// src/features/auth/ui/RegisterForm.jsx
 import {
   Box, Button, Checkbox, Container, FormControlLabel, Grid,
   IconButton, InputAdornment, Link, TextField, Typography, Paper,
@@ -6,7 +7,7 @@ import {
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { Link as RouterLink } from "react-router-dom";
 import SocialAuthButtons from "@/features/auth/ui/SocialAuthButtons";
-//import PasswordStrengthBar from "@/shared/ui/PasswordStrengthBar"; 
+import PasswordStrengthBar from "react-password-strength-bar";
 
 export default function RegisterForm({
   form, errors, submitting, showPw, showPw2, passwordStrength,
@@ -36,6 +37,7 @@ export default function RegisterForm({
                 autoComplete="given-name"
               />
             </Grid>
+
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Apellidos"
@@ -81,7 +83,13 @@ export default function RegisterForm({
                   ),
                 }}
               />
-              <PasswordStrengthBar password={passwordStrength} />
+
+              {/*  form.password  */}
+              <PasswordStrengthBar
+                password={form.password || ""}
+                shortScoreWord="Muy corta"
+                scoreWords={["Débil", "Regular", "Buena", "Fuerte", "Excelente"]}
+              />
             </Grid>
 
             <Grid item xs={12}>
@@ -108,7 +116,12 @@ export default function RegisterForm({
 
             <Grid item xs={12}>
               <FormControlLabel
-                control={<Checkbox checked={form.accepted} onChange={(e) => onChange("accepted", e.target.checked)} />}
+                control={
+                  <Checkbox
+                    checked={form.accepted}
+                    onChange={(e) => onChange("accepted", e.target.checked)}
+                  />
+                }
                 label={
                   <Typography variant="body2">
                     Acepto los <Link href="#">Términos</Link> &{" "}
@@ -165,3 +178,4 @@ export default function RegisterForm({
     </Container>
   );
 }
+

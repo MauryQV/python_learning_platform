@@ -22,7 +22,7 @@ const RegisterPage = lazy(() => import("./pages/RegisterPage.jsx"));
 const VerifyEmailPage = lazy(() => import("./pages/VerifyEmail.jsx"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPassword.jsx"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPassword.jsx"));
-const DashboardPage = lazy(() => import("./pages/Dashboard.jsx"));     
+const DashboardPage = lazy(() => import("./pages/DashBoard.jsx"));     
 const ProfilePage = lazy(() => import("./pages/ProfilePage.jsx"));
 const AdminDashboardPage = lazy(() => import("./pages/admin/AdminDashboardPage.jsx"));
 

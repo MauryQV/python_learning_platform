@@ -52,9 +52,9 @@ export function useProfileModel() {
         setInitialUser(base);
         setForm({ name: base.name || "", bio: base.bio || "" });
         setGoals(Array.isArray(base.goals) ? base.goals : ["Texto"]);
-      } catch (e) {
-        // si falla, deja los defaults
-      }
+      } catch {
+  setError("No se pudo cargar el perfil");
+}
     })();
     return () => { mounted = false; };
   }, [user]);

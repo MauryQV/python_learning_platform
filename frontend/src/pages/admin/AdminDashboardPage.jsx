@@ -10,7 +10,7 @@ export default function DashboardPage() {
   const qc = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
 
-  // ⬇️ ahora también traemos los roles del backend y el cambio de rol
+  //ahora también traemos los roles del backend y el cambio de rol
   const { usersQuery, rolesQuery, toggleStatus, changeRole } = useAdminUsers();
 
   const handleRefresh = () => {
@@ -24,7 +24,7 @@ export default function DashboardPage() {
         <AdminUsersTable
           users={usersQuery.data ?? []}
           loading={usersQuery.isLoading || usersQuery.isFetching}
-          allowedRoles={rolesQuery.data ?? []} // 👈 roles desde backend
+          allowedRoles={rolesQuery.data ?? []} 
           onRefresh={handleRefresh}
           // Espera (id, currentIsActive:boolean)
           onToggleStatus={(id, currentIsActive) =>
@@ -32,7 +32,7 @@ export default function DashboardPage() {
               { id, currentIsActive },
               {
                 onSuccess: () =>
-                  enqueueSnackbar("Estado actualizado ✅", { variant: "success" }),
+                  enqueueSnackbar("Estado actualizado", { variant: "success" }),
                 onError: (e) =>
                   enqueueSnackbar(
                     `No se pudo actualizar el estado: ${e?.message ?? "Error"}`,
@@ -47,7 +47,7 @@ export default function DashboardPage() {
               { id, nextRole },
               {
                 onSuccess: () =>
-                  enqueueSnackbar("Rol actualizado ✅", { variant: "success" }),
+                  enqueueSnackbar("Rol actualizado", { variant: "success" }),
                 onError: (e) =>
                   enqueueSnackbar(
                     `No se pudo cambiar el rol: ${e?.message ?? "Error"}`,

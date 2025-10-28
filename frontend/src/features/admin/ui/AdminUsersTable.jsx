@@ -9,42 +9,6 @@ import { Refresh as RefreshIcon } from "@mui/icons-material";
 
 const YELLOW = "#F6D458";
 
-/* ---------- Estado activo (confía en isActive si viene del mapper) ---------- */
-const isUserActive = (user) => {
-  // 1) si el mapper ya te trae isActive, úsalo
-  if (typeof user?.isActive === "boolean") return user.isActive;
-
-  // 2) si te trae statusNormalized del mapper
-  if (typeof user?.statusNormalized === "string") {
-    const s = user.statusNormalized.trim().toLowerCase();
-    if (["active", "activo", "enabled", "true"].includes(s)) return true;
-    if (["blocked", "bloqueado", "disabled", "inactive", "false"].includes(s)) return false;
-  }
-
-  // 3) backend crudo: status "active"/"blocked"
-  if (typeof user?.status === "string") {
-    const s = user.status.trim().toLowerCase();
-    if (s === "active" || s === "activo" || s === "enabled" || s === "true") return true;
-    if (s === "blocked" || s === "bloqueado" || s === "disabled" || s === "inactive" || s === "false") return false;
-  }
-
-  // 4) otros nombres comunes
-  const raw =
-    user?.accountStatus ??
-    user?.active ??
-    user?.enabled ??
-    (typeof user?.blocked !== "undefined" ? !user.blocked : undefined);
-
-  if (typeof raw === "boolean") return raw;
-  if (typeof raw === "number") return raw === 1;
-  if (typeof raw === "string") {
-    const s = raw.trim().toLowerCase();
-    if (["active", "activo", "enabled", "enable", "true"].includes(s)) return true;
-    if (["blocked", "bloqueado", "disabled", "disable", "inactive", "false"].includes(s)) return false;
-  }
-  return false;
-};
-
 /* ---------- Roles helpers ---------- */
 const getAllRoles = (user) => {
   const r = user?.roles;
@@ -131,13 +95,22 @@ function AdminUsersTable({
                 <TableCell align="center"><strong>Acciones</strong></TableCell>
               </TableRow>
             </TableHead>
+
             <TableBody>
               {Array.isArray(users) && users.length > 0 ? (
                 users.map((user) => {
                   const id = user?.userId ?? user?.id ?? user?._id;
+                  console.log("Usuario:", id, "→ status:", user.status, "statusNormalized:", user.statusNormalized, "isActive:", user.isActive);
                   const roles = getAllRoles(user);
                   const primaryRole = getPrimaryRole(user);
-                  const active = isUserActive(user); // ← siempre booleano real
+
+                  // 🔹 usa exactamente lo que trae el backend
+                  const statusText = (user?.status ?? user?.statusNormalized ?? "")
+                    .toString()
+                    .trim()
+                    .toLowerCase();
+                  const active = statusText === "active" || user?.isActive === true;
+
                   const rowDisabled = isUpdatingId === id;
 
                   return (
@@ -146,6 +119,7 @@ function AdminUsersTable({
                       <TableCell>{displayName(user)}</TableCell>
                       <TableCell>{user.email}</TableCell>
 
+                      {/* roles */}
                       <TableCell>
                         <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
                           {roles.length > 0 ? (
@@ -162,6 +136,7 @@ function AdminUsersTable({
                         </Box>
                       </TableCell>
 
+                      {/* select para rol primario */}
                       <TableCell>
                         <FormControl fullWidth size="small" disabled={rowDisabled}>
                           <InputLabel id={`role-select-${id}`}>Rol</InputLabel>
@@ -188,6 +163,7 @@ function AdminUsersTable({
                         </FormControl>
                       </TableCell>
 
+                      {/* estado */}
                       <TableCell>
                         <Chip
                           label={active ? "Activo" : "Bloqueado"}
@@ -196,12 +172,13 @@ function AdminUsersTable({
                         />
                       </TableCell>
 
+                      {/* acción */}
                       <TableCell align="center">
                         <Button
                           size="small"
                           variant="contained"
                           color={active ? "error" : "success"}
-                          onClick={() => onToggleStatus(id, active)} // ← pasa booleano actual
+                          onClick={() => onToggleStatus(id, active)}
                           disabled={rowDisabled}
                         >
                           {active ? "Bloquear" : "Activar"}

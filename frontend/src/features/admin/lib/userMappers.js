@@ -1,37 +1,43 @@
 // src/features/admin/lib/userMappers.js
 
-// Convierte cualquier valor “parecido a booleano” en verdadero booleano
 const toBool = (v) => {
   if (typeof v === "boolean") return v;
   if (typeof v === "number") return v !== 0;
   if (typeof v === "string") {
     const s = v.trim().toLowerCase();
-    if (["1","true","yes","activo","active","enabled","enable"].includes(s)) return true;
-    if (["0","false","no","inactivo","inactive","blocked","bloqueado","disabled","disable"].includes(s)) return false;
+    if (["1","true","yes","si","sí","on","enabled","enable","activo","active"].includes(s)) return true;
+    if (["0","false","no","off","disabled","disable","inactivo","inactive","bloqueado","blocked"].includes(s)) return false;
   }
   return undefined;
 };
 
-// Normaliza “estado” en un par { isActive, statusNormalized }
-const normalizeStatus = (u) => {
-  // 1) Prioriza flags booleanos típicos
+const normalizeStatus = (u = {}) => {
+  
+  const rawStatus = u?.status ?? u?.estatus;
+
+  if (typeof rawStatus === "string") {
+    const s = rawStatus.trim().toLowerCase();
+    if (s === "active")   return { isActive: true,  status: "active",  statusNormalized: "active" };
+    if (s === "blocked")  return { isActive: false, status: "blocked", statusNormalized: "blocked" };
+    return { isActive: undefined, status: s, statusNormalized: s || "unknown" };
+  }
+
+  // 1) Flags booleanos típicos (si existen)
   const candidates = [
     u?.isActive,
     u?.active,
     u?.enabled,
     typeof u?.blocked !== "undefined" ? !u.blocked : undefined,
   ];
-
   for (const c of candidates) {
     const b = toBool(c);
     if (typeof b === "boolean") {
-      return { isActive: b, statusNormalized: b ? "active" : "blocked" };
+      return { isActive: b, status: b ? "active" : "blocked", statusNormalized: b ? "active" : "blocked" };
     }
   }
 
-  // 2) Luego campos de texto / variantes
+  // 2) Otras variantes textuales secundarias (si no hay status/estatus)
   const raw =
-    u?.status ??
     u?.accountStatus ??
     u?.state ??
     u?.userStatus ??
@@ -39,16 +45,13 @@ const normalizeStatus = (u) => {
     "";
 
   const s = String(raw || "").trim().toLowerCase();
-  if (["active","activo","enabled","enable","true","1"].includes(s))
-    return { isActive: true, statusNormalized: "active" };
-  if (["blocked","bloqueado","disabled","disable","inactive","false","0"].includes(s))
-    return { isActive: false, statusNormalized: "blocked" };
+  if (s === "active")  return { isActive: true,  status: "active",  statusNormalized: "active" };
+  if (s === "blocked") return { isActive: false, status: "blocked", statusNormalized: "blocked" };
 
-  // 3) Si no sabemos, usa false explícito para que la UI no titubee
-  return { isActive: false, statusNormalized: s || "unknown" };
+  return { isActive: undefined, status: "", statusNormalized: s || "unknown" };
 };
 
-// Normaliza roles
+/* roles */
 const normalizeRoleName = (r) => {
   if (!r) return "";
   if (typeof r === "string") return r.trim().toLowerCase();
@@ -57,16 +60,17 @@ const normalizeRoleName = (r) => {
   ).toString().trim().toLowerCase();
 };
 
-export const mapUser = (u) => {
-  const { isActive, statusNormalized } = normalizeStatus(u);
+/* ---------------- mapper principal ---------------- */
+export const mapUser = (u = {}) => {
+  const { isActive, status, statusNormalized } = normalizeStatus(u);
 
-  // roles como array o single
   const rolesRaw =
     u?.roles ||
     u?.Roles ||
     u?.userRoles ||
     (u?.role ? [u.role] : []) ||
     [];
+
   const roles = Array.isArray(rolesRaw)
     ? rolesRaw.map(normalizeRoleName).filter(Boolean)
     : [];
@@ -81,11 +85,18 @@ export const mapUser = (u) => {
     email: u?.email ?? u?.username ?? u?.mail ?? "",
     firstName: u?.firstName ?? u?.given_name ?? "",
     lastName: u?.lastName ?? u?.family_name ?? "",
+
     roles,
     primaryRole,
-    isActive,            // 👈 la tabla confía en esto
-    statusNormalized,    // info útil para debug
-    _raw: u,             // por si necesitas revisar origen
+
+    // La tabla usa este booleano
+    isActive: typeof isActive === "boolean" ? isActive : status === "active",
+    status,           
+    statusNormalized, 
+
+    _raw: u,
   };
 };
+
+export { toBool, normalizeStatus };
 

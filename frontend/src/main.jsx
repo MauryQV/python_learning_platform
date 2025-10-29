@@ -7,7 +7,7 @@ import { SnackbarProvider } from "notistack";
 import { theme } from "./theme.js";
 import "./index.css";
 import App from "./App.jsx";
-
+const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>

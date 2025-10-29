@@ -80,9 +80,10 @@ export const loginWithGoogleController = async (req, res) => {
 
 export const registerWithGoogleController = async (req, res) => {
   try {
-    const { idToken } = req.body;
+    // Asegúrate de que el frontend envíe { token: "..." }
+    const { idToken: idToken } = req.body;
 
-    // Validar que idToken existe
+    // Validar que el token exista
     if (!idToken) {
       return res.status(400).json({
         success: false,
@@ -90,12 +91,14 @@ export const registerWithGoogleController = async (req, res) => {
       });
     }
 
-    return res.status(201).json({
-      success: true,
-      message: "Registration successful",
-    });
+    const user = await authService.registerWithGoogle(idToken);
+
+    // Si el servicio devuelve el usuario correctamente
+    return res
+      .status(201)
+      .json({ success: true, message: "Registration successful", user });
   } catch (error) {
-    console.error("Register with Google error:", error);
+    console.error("❌ Register with Google error:", error);
 
     if (error.message.includes("already registered")) {
       return res.status(409).json({
@@ -104,10 +107,7 @@ export const registerWithGoogleController = async (req, res) => {
       });
     }
 
-    if (
-      error.message.includes("invalid") ||
-      error.message.includes("Invalid")
-    ) {
+    if (/invalid/i.test(error.message)) {
       return res.status(401).json({
         success: false,
         message: "Invalid Google token",

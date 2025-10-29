@@ -19,6 +19,7 @@ const VerifyEmailPage = lazy(() => import("./pages/VerifyEmail.jsx"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPassword.jsx"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPassword.jsx"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage.jsx"));
+const EditProfile = lazy(() => import("./pages/EditProfile.jsx"));
 const AdminDashboardPage = lazy(() => import("./pages/admin/AdminDashboardPage.jsx"));
 
 function NotFound() {
@@ -61,6 +62,15 @@ export default function App() {
                   element={
                     <ProtectedRoute>
                       <ProfilePage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                 <Route
+                  path="/edit-profile"
+                  element={
+                    <ProtectedRoute>
+                      <EditProfile />
                     </ProtectedRoute>
                   }
                 />

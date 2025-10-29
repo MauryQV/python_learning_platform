@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import adminRoutes from "./src/routes/admin.route.js";
 import authRoutes from "./src/routes/auth.route.js";
 import profileRoutes from "./src/routes/profile.route.js";
+import roleRoutes from "./src/routes/role.route.js";
 import { errorHandler } from "./src/middleware/error.middleware.js";
 
 dotenv.config();
@@ -49,6 +50,7 @@ app.use("/api/profile", profileRoutes);
 
 app.use("/api/admin", adminRoutes);
 
+app.use("/api/roles", roleRoutes);
 app.use(errorHandler);
 
 app.listen(PORT, () => {

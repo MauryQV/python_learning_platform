@@ -1,11 +1,15 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { api } from "../api/axiosInstance.js";
-import {
-  loginUser as apiLoginUser,
-  loginWithGoogle as apiLoginWithGoogle,
-} from "../api/auth";
+import { loginUser as apiLoginUser, loginWithGoogle as apiLoginWithGoogle } from "../api/auth";
+import { AUTH_STORAGE_KEYS } from "./auth.constants";
 
 const AuthContext = createContext(null);
+
+// 🔧 Normaliza el rol desde `role` o `roles[]`
+const normalizeRole = (u) =>
+  (u?.role || (Array.isArray(u?.roles) ? u.roles[0] : "") || "")
+    .toString()
+    .toLowerCase();
 
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
@@ -14,16 +18,26 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
+  // ⬇️ Al leer del storage ya dejamos el role normalizado
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem("user");
-    return savedUser ? JSON.parse(savedUser) : null;
+    const savedUser = localStorage.getItem(AUTH_STORAGE_KEYS.user);
+    if (!savedUser) return null;
+    const parsed = JSON.parse(savedUser);
+    const role = normalizeRole(parsed);
+    return { ...parsed, role };
   });
-  const [token, setToken] = useState(() => localStorage.getItem("token"));
+
+  const [token, setToken] = useState(() =>
+    localStorage.getItem(AUTH_STORAGE_KEYS.token)
+  );
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (token) {
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      api.defaults.headers.common.Authorization = `Bearer ${token}`;
+    } else {
+      delete api.defaults.headers.common.Authorization;
     }
     setLoading(false);
   }, [token]);
@@ -34,22 +48,23 @@ export const AuthProvider = ({ children }) => {
       if (res?.token) {
         const { token: newToken, user: userData } = res;
 
+        const role = normalizeRole(userData || {});
+        const mergedUser = userData ? { ...userData, role } : null;
+
         setToken(newToken);
-        setUser(userData);
+        setUser(mergedUser);
 
-        localStorage.setItem("token", newToken);
-        if (userData) localStorage.setItem("user", JSON.stringify(userData));
+        localStorage.setItem(AUTH_STORAGE_KEYS.token, newToken);
+        if (mergedUser) {
+          localStorage.setItem(AUTH_STORAGE_KEYS.user, JSON.stringify(mergedUser));
+        }
 
-        api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
-
-        return { success: true, user: userData };
+        api.defaults.headers.common.Authorization = `Bearer ${newToken}`;
+        return { success: true, user: mergedUser };
       }
       return { success: false, error: res?.message || "No se pudo iniciar sesión" };
     } catch (error) {
-      return {
-        success: false,
-        error: error?.message || "Error al iniciar sesión",
-      };
+      return { success: false, error: error?.message || "Error al iniciar sesión" };
     }
   };
 
@@ -57,39 +72,39 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await apiLoginWithGoogle(idToken);
       if (res?.success && res?.token) {
+        const role = normalizeRole(res.user || {});
+        const mergedUser = res.user ? { ...res.user, role } : null;
+
         setToken(res.token);
-        if (res.user) setUser(res.user);
+        setUser(mergedUser);
 
-        localStorage.setItem("token", res.token);
-        if (res.user) localStorage.setItem("user", JSON.stringify(res.user));
+        localStorage.setItem(AUTH_STORAGE_KEYS.token, res.token);
+        if (mergedUser) {
+          localStorage.setItem(AUTH_STORAGE_KEYS.user, JSON.stringify(mergedUser));
+        }
 
-        api.defaults.headers.common["Authorization"] = `Bearer ${res.token}`;
-        return { success: true, user: res.user };
+        api.defaults.headers.common.Authorization = `Bearer ${res.token}`;
+        return { success: true, user: mergedUser };
       }
       return { success: false, error: res?.message || "No se pudo iniciar sesión con Google" };
     } catch (error) {
-      return {
-        success: false,
-        error: error?.message || "Error con Google Login",
-      };
+      return { success: false, error: error?.message || "Error con Google Login" };
     }
   };
 
   const logout = () => {
     setToken(null);
     setUser(null);
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    delete api.defaults.headers.common["Authorization"];
+    localStorage.removeItem(AUTH_STORAGE_KEYS.token);
+    localStorage.removeItem(AUTH_STORAGE_KEYS.user);
+    delete api.defaults.headers.common.Authorization;
   };
 
   useEffect(() => {
     const interceptor = api.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (error?.response?.status === 401) {
-          logout();
-        }
+        if (error?.response?.status === 401) logout();
         return Promise.reject(error);
       }
     );
@@ -102,7 +117,7 @@ export const AuthProvider = ({ children }) => {
         user,
         token,
         loading,
-        isAuthenticated: !!user,
+        isAuthenticated: !!user, // si prefieres: !!token
         setUser,
         setToken,
         login,

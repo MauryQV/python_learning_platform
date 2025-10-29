@@ -6,12 +6,26 @@ import ProfileForm from "@/features/profile/ui/ProfileForm";
 import GoalsEditor from "@/features/profile/ui/GoalsEditor";
 import SkillsList from "@/features/profile/ui/SkillsList";
 import SectionTitle from "@/features/profile/ui/SectionTitle";
+import { Alert, CircularProgress } from "@mui/material"; 
 
 export default function ProfilePage() {
   const {
     state: { initialUser, form, dirty, saving, error, goals, goalInput },
     actions: { setGoalInput, onChange, onCancel, onSubmit, addGoal, removeGoal, onGoalKey },
   } = useProfileModel();
+
+  if (!initialUser) {
+    return (
+      <Box sx={{ minHeight: "100vh", bgcolor: "#fff", display: "grid", placeItems: "center" }}>
+        <Stack spacing={2} alignItems="center">
+          <CircularProgress />
+          <Typography variant="body2" color="text.secondary">
+            Cargando tu perfil…
+          </Typography>
+        </Stack>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#fff" }}>
@@ -25,6 +39,12 @@ export default function ProfilePage() {
       </Box>
 
       <Container maxWidth="lg">
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {typeof error === "string" ? error : "Ocurrió un problema al cargar/guardar tu perfil."}
+          </Alert>
+        )}
+
         <Box
           sx={{
             display: "grid",
@@ -35,11 +55,11 @@ export default function ProfilePage() {
         >
           {/* LEFT: Profile Card */}
           <ProfileCard
-            name={form.name || "Tu nombre"}
-            role={initialUser.role}
-            email={initialUser.email}
-            bio={form.bio || "Bio"}
-            avatarUrl={initialUser.avatarUrl}
+            name={form?.name || initialUser?.name || "Tu nombre"}          
+            role={initialUser?.role || "student"}                           
+            email={initialUser?.email || "tu-email@ejemplo.com"}        
+            bio={form?.bio || initialUser?.bio || "Bio"}                       
+            avatarUrl={initialUser?.avatarUrl || undefined}                   
           />
 
           {/* RIGHT: two columns */}
@@ -85,7 +105,7 @@ export default function ProfilePage() {
                 />
               </Paper>
 
-              <SkillsList title="Tecnologías" skills={initialUser.skills} />
+              <SkillsList title="Tecnologías" skills={initialUser?.skills || []} /> {/* 🔧 CHANGED */}
             </Stack>
           </Box>
         </Box>

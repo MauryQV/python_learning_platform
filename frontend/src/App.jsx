@@ -1,5 +1,4 @@
-// src/App.jsx
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./app/providers/ProtectedRoute.jsx";
@@ -8,21 +7,17 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import "./index.css";
 
-
 const queryClient = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false } },
 });
 
-
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
-
 
 const LoginPage = lazy(() => import("./pages/LoginPage.jsx"));
 const RegisterPage = lazy(() => import("./pages/RegisterPage.jsx"));
 const VerifyEmailPage = lazy(() => import("./pages/VerifyEmail.jsx"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPassword.jsx"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPassword.jsx"));
-const DashboardPage = lazy(() => import("./pages/DashBoard.jsx"));     
 const ProfilePage = lazy(() => import("./pages/ProfilePage.jsx"));
 const AdminDashboardPage = lazy(() => import("./pages/admin/AdminDashboardPage.jsx"));
 
@@ -30,7 +25,7 @@ function NotFound() {
   return (
     <div style={{ textAlign: "center", padding: "4rem" }}>
       <h2>404 - Página no encontrada</h2>
-      <a href="/login">Volver al inicio</a>
+      <Link to="/login">Volver al inicio</Link>
     </div>
   );
 }
@@ -49,25 +44,18 @@ export default function App() {
               }
             >
               <Routes>
-                {/* Redirección base */}
+                {/* Base redirect */}
                 <Route path="/" element={<Navigate to="/login" replace />} />
 
-                {/* Públicas */}
+                {/* Public routes */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/verify-email" element={<VerifyEmailPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/dashboard" element={<Navigate to="/profile" replace />} /> 
 
-                {/* Protegidas */}
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <DashboardPage />
-                    </ProtectedRoute>
-                  }
-                />
+                {/* Protected student profile */}
                 <Route
                   path="/profile"
                   element={
@@ -77,7 +65,7 @@ export default function App() {
                   }
                 />
 
-                {/* Admin */}
+                {/* Admin area */}
                 <Route
                   path="/admin"
                   element={

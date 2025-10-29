@@ -1,8 +1,8 @@
-// src/pages/LoginPage.jsx
 import { Container } from "@mui/material";
 import LoginForm from "@/features/auth/ui/LoginForm";
 import { useLoginModel } from "@/features/auth/model/useLogin";
 import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
   const {
@@ -11,18 +11,36 @@ export default function LoginPage() {
   } = useLoginModel();
 
   const { loginWithGoogle } = useAuth();
+  const navigate = useNavigate(); 
 
   const handleGoogleIdToken = async (idToken) => {
     if (!idToken) return;
-    await loginWithGoogle(idToken);
+    const res = await loginWithGoogle(idToken);
+    if (res?.success || localStorage.getItem("token")) {
+      navigate("/profile");
+    }
   };
 
+  const handleLoginAndRedirect = async (e) => {
+    await handleLogin(e);
+    if (isSuccess || localStorage.getItem("token")) {
+      navigate("/profile");
+    }
+  }; 
+
   return (
-    <Container maxWidth={false} disableGutters sx={{
-      display:"flex", justifyContent:"center", alignItems:"center",
-      minHeight:"100vh", width:"100vw",
-      background:"linear-gradient(to right, #f5f6fa, #eaeef3)",
-    }}>
+    <Container
+      maxWidth={false}
+      disableGutters
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "100vh",
+        width: "100vw",
+        background: "linear-gradient(to right, #f5f6fa, #eaeef3)",
+      }}
+    >
       <LoginForm
         email={email}
         password={password}
@@ -32,12 +50,11 @@ export default function LoginPage() {
         isSuccess={isSuccess}
         onEmailChange={setEmail}
         onPasswordChange={setPassword}
-        onTogglePw={() => setShowPw(s=>!s)}
-        onSubmit={handleLogin}
+        onTogglePw={() => setShowPw((s) => !s)}
+        onSubmit={handleLoginAndRedirect} 
         onMicrosoft={microsoftLogin}
-        onGoogleIdToken={handleGoogleIdToken}  
+        onGoogleIdToken={handleGoogleIdToken} 
       />
     </Container>
   );
 }
-

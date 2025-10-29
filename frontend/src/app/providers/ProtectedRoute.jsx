@@ -18,8 +18,8 @@ export default function ProtectedRoute({ children, adminOnly = false }) {
 
   const role = String(user?.role || "").toLowerCase();
 
-  if (adminOnly && role !== "admin") return <Navigate to="/dashboard" replace />;
-  if (!adminOnly && role === "admin") return <Navigate to="/admin" replace />;
+  if (adminOnly && role == "student") return <Navigate to="/profile" replace />;
+  if (!adminOnly && role == "admin") return <Navigate to="/admin" replace />;
 
   return children;
 }

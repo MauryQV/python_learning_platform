@@ -10,7 +10,12 @@ const router = express.Router();
 
 router.patch("/users/:id/role", verifyToken, isAdmin, updateUserRoleController);
 
-router.patch("/users/:id/status", verifyToken, isAdmin, updateUserStatusController);
+router.patch(
+  "/users/:id/status",
+  verifyToken,
+  isAdmin,
+  updateUserStatusController
+);
 
 router.get("/users/", findAllUsersController);
 

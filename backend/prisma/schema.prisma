@@ -12,7 +12,7 @@ model User {
   firstName          String
   lastName           String
   email              String                   @unique
-  passwordHash       String
+  passwordHash       String?
   registeredAt       DateTime                 @default(now())
   status             String                   @default("active")
   attempts           Attempt[]

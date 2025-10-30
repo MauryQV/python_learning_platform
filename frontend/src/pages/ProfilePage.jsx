@@ -1,50 +1,59 @@
-import { Box, Container, Paper, Stack, Typography } from "@mui/material";
+import { 
+  Box, Container, Paper, Stack, Typography, Button, 
+  List, ListItem, ListItemText, IconButton, Tooltip 
+} from "@mui/material";
+import LogoutIcon from "@mui/icons-material/Logout"; 
+import { useNavigate } from "react-router-dom";
 import { COLORS } from "@/shared/config/colors";
 import { useProfileModel } from "@/features/profile/model/useProfileModel";
 import ProfileCard from "@/features/profile/ui/ProfileCard";
-import ProfileForm from "@/features/profile/ui/ProfileForm";
 import GoalsEditor from "@/features/profile/ui/GoalsEditor";
 import SkillsList from "@/features/profile/ui/SkillsList";
 import SectionTitle from "@/features/profile/ui/SectionTitle";
-import { Alert, CircularProgress } from "@mui/material"; 
+import { useAuth } from "@/context/AuthContext"; 
 
 export default function ProfilePage() {
+  const navigate = useNavigate();
+  const { logout } = useAuth(); 
+
   const {
-    state: { initialUser, form, dirty, saving, error, goals, goalInput },
-    actions: { setGoalInput, onChange, onCancel, onSubmit, addGoal, removeGoal, onGoalKey },
+    state: { initialUser, goals, goalInput },
+    actions: { setGoalInput, addGoal, removeGoal, onGoalKey },
   } = useProfileModel();
 
-  if (!initialUser) {
-    return (
-      <Box sx={{ minHeight: "100vh", bgcolor: "#fff", display: "grid", placeItems: "center" }}>
-        <Stack spacing={2} alignItems="center">
-          <CircularProgress />
-          <Typography variant="body2" color="text.secondary">
-            Cargando tu perfil…
-          </Typography>
-        </Stack>
-      </Box>
-    );
-  }
+  const courses = initialUser.courses || [];
+
+  const handleLogout = () => {
+    logout(); 
+    navigate("/login"); 
+  };
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#fff" }}>
-      {/* Banner */}
-      <Box sx={{ bgcolor: COLORS.YELLOW, py: 2.5, mb: 4 }}>
-        <Container maxWidth="lg">
+      {/* 🔧 Banner with logout icon */}
+      <Box sx={{ bgcolor: COLORS.YELLOW, py: 2.5, mb: 4, position: "relative" }}>
+        <Container maxWidth="lg" sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: 2 }}>
             LEARNING WITH PYTHON
           </Typography>
+
+          {/* 🔧 Logout Icon */}
+          <Tooltip title="Cerrar sesión">
+            <IconButton
+              onClick={handleLogout}
+              sx={{
+                color: "#000",
+                bgcolor: "#fff",
+                "&:hover": { bgcolor: "#f5f5f5" },
+              }}
+            >
+              <LogoutIcon />
+            </IconButton>
+          </Tooltip>
         </Container>
       </Box>
 
       <Container maxWidth="lg">
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {typeof error === "string" ? error : "Ocurrió un problema al cargar/guardar tu perfil."}
-          </Alert>
-        )}
-
         <Box
           sx={{
             display: "grid",
@@ -55,11 +64,11 @@ export default function ProfilePage() {
         >
           {/* LEFT: Profile Card */}
           <ProfileCard
-            name={form?.name || initialUser?.name || "Tu nombre"}          
-            role={initialUser?.role || "student"}                           
-            email={initialUser?.email || "tu-email@ejemplo.com"}        
-            bio={form?.bio || initialUser?.bio || "Bio"}                       
-            avatarUrl={initialUser?.avatarUrl || undefined}                   
+            name={initialUser.name || "Tu nombre"}
+            role={initialUser.role || "student"}
+            email={initialUser.email}
+            bio={initialUser.bio || "Bio"}
+            avatarUrl={initialUser.avatarUrl}
           />
 
           {/* RIGHT: two columns */}
@@ -71,23 +80,63 @@ export default function ProfilePage() {
               alignItems: "start",
             }}
           >
-            {/* LEFT stack: Mi Perfil + Acerca de mí */}
+            {/* LEFT stack: Mi Perfil + Cursos */}
             <Stack spacing={3}>
-              <ProfileForm
-                form={form}
-                error={error}
-                dirty={dirty}
-                saving={saving}
-                onChange={onChange}
-                onCancel={onCancel}
-                onSubmit={onSubmit}
-              />
-
               <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
-                <SectionTitle>Acerca de mí</SectionTitle>
-                <Typography variant="body2" color="text.secondary">
-                  About me
+                <SectionTitle>Mi Perfil</SectionTitle>
+
+                <Typography variant="body1" sx={{ fontWeight: 500, mt: 2 }}>
+                  Fecha de nacimiento:
                 </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {initialUser.birthday || "No especificada"}
+                </Typography>
+
+                <Typography variant="body1" sx={{ fontWeight: 500, mt: 2 }}>
+                  Género:
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {initialUser.gender || "No especificado"}
+                </Typography>
+
+                <Typography variant="body1" sx={{ fontWeight: 500, mt: 2 }}>
+                  Profesión:
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {initialUser.profession || "No especificada"}
+                </Typography>
+
+                <Button
+                  variant="contained"
+                  sx={{
+                    mt: 3,
+                    bgcolor: COLORS.BLUE,
+                    color: "#fff",
+                    fontWeight: "bold",
+                    "&:hover": { bgcolor: "#15a822ff" },
+                  }}
+                  onClick={() => navigate("/edit-profile")}
+                >
+                  Editar Perfil
+                </Button>
+              </Paper>
+
+              {/* Cursos Section */}
+              <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
+                <SectionTitle>Cursos</SectionTitle>
+                {courses.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    Aún no estás inscrito en ningún curso.
+                  </Typography>
+                ) : (
+                  <List>
+                    {courses.map((course, index) => (
+                      <ListItem key={index} disablePadding>
+                        <ListItemText primary={course.name} secondary={course.description} />
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
               </Paper>
             </Stack>
 
@@ -105,7 +154,7 @@ export default function ProfilePage() {
                 />
               </Paper>
 
-              <SkillsList title="Tecnologías" skills={initialUser?.skills || []} /> {/* 🔧 CHANGED */}
+              <SkillsList title="Tecnologías" skills={initialUser.skills} />
             </Stack>
           </Box>
         </Box>

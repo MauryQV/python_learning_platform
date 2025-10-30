@@ -28,6 +28,11 @@ model User {
 
   googleId     String? @unique
   profileImage String? // URL de la imagen del perfil (de Google)
+
+  birthday   DateTime?
+  gender     String?
+  profession String?
+  bio        String?   @db.VarChar(150)
 }
 
 model Role {

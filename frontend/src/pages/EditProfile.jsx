@@ -1,27 +1,85 @@
-import { Box, Container, Paper, Stack, Typography, TextField, Button, MenuItem,} from "@mui/material";
+// src/pages/EditProfile.jsx
+import {
+  Box,
+  Container,
+  Paper,
+  Stack,
+  Typography,
+  TextField,
+  Button,
+  MenuItem,
+} from "@mui/material";
 import { COLORS } from "@/shared/config/colors";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import { useProfileModel } from "@/features/profile/model/useProfileModel";
 import ProfileCard from "@/features/profile/ui/ProfileCard";
 import SectionTitle from "@/features/profile/ui/SectionTitle";
+import { profileApi } from "@/features/profile/api/profileApi";
 
 export default function EditProfile() {
   const navigate = useNavigate();
 
   const {
-    state: { initialUser, form, error, saving },
-    actions: { onChange, onSubmit, onCancel },
+    state: { initialUser },
+    actions: { fetchProfile },
   } = useProfileModel();
 
-  const handleSave = (e) => {
-    e.preventDefault();
-    console.log("Saving profile changes:", form);
+  const fallbackFullName = useMemo(
+    () =>
+      (initialUser?.name ||
+        `${initialUser?.firstName ?? ""} ${initialUser?.lastName ?? ""}`.trim()
+      ).trim(),
+    [initialUser]
+  );
+
+  const [form, setForm] = useState({
+    name: "",
+    birthday: "",
+    gender: "",
+    profession: "",
+    bio: "",
+  });
+
+  useEffect(() => {
+    if (!initialUser) return;
+    setForm((prev) => ({
+      ...prev,
+      name: fallbackFullName || "",
+      birthday: initialUser?.birthday
+        ? new Date(initialUser.birthday).toISOString().slice(0, 10) 
+        : "",
+      gender: initialUser?.gender || "",
+      profession: initialUser?.profession || "",
+      bio: initialUser?.bio || "",
+    }));
+  }, [initialUser, fallbackFullName]);
+
+  const onChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCancel = () => {
-    onCancel?.();
-    navigate("/profile"); 
+  const handleSave = async (e) => {
+    e.preventDefault();
+    const payload = {
+      name: (form.name || fallbackFullName).trim(),
+      birthday: form.birthday || "", 
+      gender: form.gender || "",
+      profession: form.profession || "",
+      bio: (form.bio || "").slice(0, 150), 
+    };
+
+    try {
+      await profileApi.update(payload); 
+      await fetchProfile();
+      navigate("/profile");            
+    } catch (err) {
+      console.error("❌ Failed to update profile:", err);
+    }
   };
+
+  const handleCancel = () => navigate("/profile");
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#fff" }}>
@@ -45,11 +103,11 @@ export default function EditProfile() {
         >
           {/* LEFT: Profile Card */}
           <ProfileCard
-            name={form.name || initialUser.name || "Tu nombre"}
-            role={initialUser.role || "student"}
-            email={initialUser.email}
-            bio={form.bio || initialUser.bio || ""}
-            avatarUrl={initialUser.avatarUrl}
+            name={form.name || fallbackFullName || "Tu nombre"}
+            role={initialUser?.role || "student"}
+            email={initialUser?.email}
+            bio={form.bio || ""}
+            avatarUrl={initialUser?.avatarUrl}
           />
 
           {/* RIGHT: Edit form */}
@@ -58,60 +116,57 @@ export default function EditProfile() {
 
             <form onSubmit={handleSave}>
               <Stack spacing={2.5} sx={{ mt: 2 }}>
-                {/* Name */}
                 <TextField
                   label="Nombre completo"
                   name="name"
-                  value={form.name || ""}
+                  value={form.name}
                   onChange={onChange}
                   fullWidth
                 />
 
-                {/* Birthday */}
                 <TextField
                   label="Fecha de nacimiento"
                   name="birthday"
                   type="date"
-                  value={form.birthday || ""}
+                  value={form.birthday}
                   onChange={onChange}
                   InputLabelProps={{ shrink: true }}
                   fullWidth
                 />
 
-                {/* Gender */}
                 <TextField
                   select
                   label="Género"
                   name="gender"
-                  value={form.gender || ""}
+                  value={form.gender}
                   onChange={onChange}
                   fullWidth
                 >
                   <MenuItem value="Masculino">Masculino</MenuItem>
                   <MenuItem value="Femenino">Femenino</MenuItem>
+                  <MenuItem value="Prefiero no decirlo">Prefiero no decirlo</MenuItem>
                 </TextField>
 
-                {/* Profession */}
                 <TextField
                   label="Profesión"
                   name="profession"
-                  value={form.profession || ""}
+                  value={form.profession}
                   onChange={onChange}
                   fullWidth
                 />
 
-                {/* Bio */}
                 <TextField
                   label="Biografía"
                   name="bio"
                   multiline
                   rows={3}
-                  value={form.bio || ""}
+                  value={form.bio}
                   onChange={onChange}
                   fullWidth
+                  inputProps={{ maxLength: 150 }}
+                  helperText={`${form.bio.length}/150`}
                 />
 
-                {/* Buttons */}
                 <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
                   <Button
                     type="submit"
@@ -122,25 +177,13 @@ export default function EditProfile() {
                       fontWeight: "bold",
                       "&:hover": { bgcolor: "#15a822ff" },
                     }}
-                    disabled={saving}
                   >
                     Guardar cambios
                   </Button>
-
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={handleCancel}
-                  >
+                  <Button variant="outlined" color="error" onClick={handleCancel}>
                     Cancelar
                   </Button>
                 </Stack>
-
-                {error && (
-                  <Typography color="error" variant="body2">
-                    {error.message || "Error al guardar los cambios"}
-                  </Typography>
-                )}
               </Stack>
             </form>
           </Paper>

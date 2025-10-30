@@ -1,7 +1,5 @@
-import { 
-  Box, Container, Paper, Stack, Typography, Button, 
-  List, ListItem, ListItemText, IconButton, Tooltip 
-} from "@mui/material";
+import {  Box, Container, Paper, Stack, Typography, Button,  List, ListItem, ListItemText, IconButton, Tooltip } from "@mui/material";
+import { useEffect } from "react";
 import LogoutIcon from "@mui/icons-material/Logout"; 
 import { useNavigate } from "react-router-dom";
 import { COLORS } from "@/shared/config/colors";
@@ -18,9 +16,13 @@ export default function ProfilePage() {
 
   const {
     state: { initialUser, goals, goalInput },
-    actions: { setGoalInput, addGoal, removeGoal, onGoalKey },
+    actions: { setGoalInput, addGoal, removeGoal, onGoalKey, fetchProfile },
   } = useProfileModel();
 
+   useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
+  
   const courses = initialUser.courses || [];
 
   const handleLogout = () => {

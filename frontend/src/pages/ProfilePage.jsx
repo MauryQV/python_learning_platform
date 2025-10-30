@@ -1,4 +1,8 @@
-import { Box, Container, Paper, Stack, Typography, Button, List, ListItem, ListItemText } from "@mui/material";
+import { 
+  Box, Container, Paper, Stack, Typography, Button, 
+  List, ListItem, ListItemText, IconButton, Tooltip 
+} from "@mui/material";
+import LogoutIcon from "@mui/icons-material/Logout"; 
 import { useNavigate } from "react-router-dom";
 import { COLORS } from "@/shared/config/colors";
 import { useProfileModel } from "@/features/profile/model/useProfileModel";
@@ -6,10 +10,12 @@ import ProfileCard from "@/features/profile/ui/ProfileCard";
 import GoalsEditor from "@/features/profile/ui/GoalsEditor";
 import SkillsList from "@/features/profile/ui/SkillsList";
 import SectionTitle from "@/features/profile/ui/SectionTitle";
-
+import { useAuth } from "@/context/AuthContext"; 
 
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const { logout } = useAuth(); 
+
   const {
     state: { initialUser, goals, goalInput },
     actions: { setGoalInput, addGoal, removeGoal, onGoalKey },
@@ -17,14 +23,33 @@ export default function ProfilePage() {
 
   const courses = initialUser.courses || [];
 
+  const handleLogout = () => {
+    logout(); 
+    navigate("/login"); 
+  };
+
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#fff" }}>
-      {/* Banner */}
-      <Box sx={{ bgcolor: COLORS.YELLOW, py: 2.5, mb: 4 }}>
-        <Container maxWidth="lg">
+      {/* 🔧 Banner with logout icon */}
+      <Box sx={{ bgcolor: COLORS.YELLOW, py: 2.5, mb: 4, position: "relative" }}>
+        <Container maxWidth="lg" sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: 2 }}>
             LEARNING WITH PYTHON
           </Typography>
+
+          {/* 🔧 Logout Icon */}
+          <Tooltip title="Cerrar sesión">
+            <IconButton
+              onClick={handleLogout}
+              sx={{
+                color: "#000",
+                bgcolor: "#fff",
+                "&:hover": { bgcolor: "#f5f5f5" },
+              }}
+            >
+              <LogoutIcon />
+            </IconButton>
+          </Tooltip>
         </Container>
       </Box>
 
@@ -81,7 +106,6 @@ export default function ProfilePage() {
                   {initialUser.profession || "No especificada"}
                 </Typography>
 
-                {/* Editar Perfil Button */}
                 <Button
                   variant="contained"
                   sx={{
@@ -92,7 +116,6 @@ export default function ProfilePage() {
                     "&:hover": { bgcolor: "#15a822ff" },
                   }}
                   onClick={() => navigate("/edit-profile")}
-
                 >
                   Editar Perfil
                 </Button>

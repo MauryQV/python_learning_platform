@@ -1,11 +1,13 @@
 import * as authService from "../services/auth.service.js";
+import { sendMail } from "../services/mail.service.js";
+
 
 export const registerController = async (req, res, next) => {
   try {
     const data = await authService.register(req.body);
     res.status(201).json({
       success: true,
-      message: "Usuario registrado exitosamente",
+      message: "Usuario registrado exitosamente. Revisa tu email para verificar tu cuenta.",
       ...data,
     });
   } catch (err) {
@@ -30,7 +32,6 @@ export const loginWithGoogleController = async (req, res) => {
   try {
     const { idToken } = req.body;
 
-    // Validar que idToken existe
     if (!idToken) {
       return res.status(400).json({
         success: false,
@@ -45,7 +46,6 @@ export const loginWithGoogleController = async (req, res) => {
   } catch (error) {
     console.error("Login with Google error:", error);
 
-    // Diferenciar tipos de errores
     if (error.message.includes("User not found")) {
       return res.status(404).json({
         success: false,
@@ -61,10 +61,7 @@ export const loginWithGoogleController = async (req, res) => {
       });
     }
 
-    if (
-      error.message.includes("invalid") ||
-      error.message.includes("Invalid")
-    ) {
+    if (/invalid/i.test(error.message)) {
       return res.status(401).json({
         success: false,
         message: "Invalid Google token",
@@ -80,10 +77,8 @@ export const loginWithGoogleController = async (req, res) => {
 
 export const registerWithGoogleController = async (req, res) => {
   try {
-    // Asegúrate de que el frontend envíe { token: "..." }
     const { idToken: idToken } = req.body;
 
-    // Validar que el token exista
     if (!idToken) {
       return res.status(400).json({
         success: false,
@@ -93,7 +88,6 @@ export const registerWithGoogleController = async (req, res) => {
 
     const user = await authService.registerWithGoogle(idToken);
 
-    // Si el servicio devuelve el usuario correctamente
     return res
       .status(201)
       .json({ success: true, message: "Registration successful", user });
@@ -120,3 +114,23 @@ export const registerWithGoogleController = async (req, res) => {
     });
   }
 };
+
+export const verifyEmailController = async (req, res, next) => {
+  try {
+    const token = String(req.query.token || "");
+    if (!token) {
+      return res.status(400).json({ ok: false, error: "Missing ?token" });
+    }
+
+    const result = await authService.verifyEmailToken(token);
+    if (!result?.ok) {
+      return res.status(400).json(result);
+    }
+
+    return res.json({ ok: true, message: "Email verificado correctamente." });
+  } catch (err) {
+    next(err);
+  }
+};
+
+

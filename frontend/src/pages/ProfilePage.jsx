@@ -1,6 +1,6 @@
-import {  Box, Container, Paper, Stack, Typography, Button,  List, ListItem, ListItemText, IconButton, Tooltip } from "@mui/material";
+import { Box, Container, Paper, Stack, Typography, Button, List, ListItem, ListItemText, IconButton, Tooltip,} from "@mui/material";
 import { useEffect } from "react";
-import LogoutIcon from "@mui/icons-material/Logout"; 
+import LogoutIcon from "@mui/icons-material/Logout";
 import { useNavigate } from "react-router-dom";
 import { COLORS } from "@/shared/config/colors";
 import { useProfileModel } from "@/features/profile/model/useProfileModel";
@@ -8,38 +8,57 @@ import ProfileCard from "@/features/profile/ui/ProfileCard";
 import GoalsEditor from "@/features/profile/ui/GoalsEditor";
 import SkillsList from "@/features/profile/ui/SkillsList";
 import SectionTitle from "@/features/profile/ui/SectionTitle";
-import { useAuth } from "@/context/AuthContext"; 
+import { useAuth } from "@/context/AuthContext";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const { logout } = useAuth(); 
+  const { logout } = useAuth();
 
   const {
     state: { initialUser, goals, goalInput },
     actions: { setGoalInput, addGoal, removeGoal, onGoalKey, fetchProfile },
   } = useProfileModel();
 
-   useEffect(() => {
+  useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
-  
-  const courses = initialUser.courses || [];
+
+  const fullName =
+    initialUser?.name ||
+    `${initialUser?.firstName ?? ""} ${initialUser?.lastName ?? ""}`.trim() ||
+    "Tu nombre";
+
+  const courses = initialUser?.courses || [];
 
   const handleLogout = () => {
-    logout(); 
-    navigate("/login"); 
+    logout();
+    navigate("/login");
   };
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#fff" }}>
-      {/* 🔧 Banner with logout icon */}
-      <Box sx={{ bgcolor: COLORS.YELLOW, py: 2.5, mb: 4, position: "relative" }}>
-        <Container maxWidth="lg" sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      {/* Banner with logout icon */}
+      <Box
+        sx={{
+          bgcolor: COLORS.YELLOW,
+          py: 2.5,
+          mb: 4,
+          position: "relative",
+        }}
+      >
+        <Container
+          maxWidth="lg"
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: 2 }}>
             LEARNING WITH PYTHON
           </Typography>
 
-          {/* 🔧 Logout Icon */}
+          {/* Logout Icon */}
           <Tooltip title="Cerrar sesión">
             <IconButton
               onClick={handleLogout}
@@ -66,11 +85,11 @@ export default function ProfilePage() {
         >
           {/* LEFT: Profile Card */}
           <ProfileCard
-            name={initialUser.name || "Tu nombre"}
-            role={initialUser.role || "student"}
-            email={initialUser.email}
-            bio={initialUser.bio || "Bio"}
-            avatarUrl={initialUser.avatarUrl}
+            name={fullName}
+            role={initialUser?.role || "student"}
+            email={initialUser?.email}
+            bio={initialUser?.bio || "Bio"}
+            avatarUrl={initialUser?.avatarUrl}
           />
 
           {/* RIGHT: two columns */}
@@ -91,21 +110,25 @@ export default function ProfilePage() {
                   Fecha de nacimiento:
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {initialUser.birthday || "No especificada"}
+                  {initialUser?.birthday
+                    ? new Date(initialUser.birthday)
+                        .toISOString()
+                        .slice(0, 10)
+                    : "No especificada"}
                 </Typography>
 
                 <Typography variant="body1" sx={{ fontWeight: 500, mt: 2 }}>
                   Género:
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {initialUser.gender || "No especificado"}
+                  {initialUser?.gender || "No especificado"}
                 </Typography>
 
                 <Typography variant="body1" sx={{ fontWeight: 500, mt: 2 }}>
                   Profesión:
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {initialUser.profession || "No especificada"}
+                  {initialUser?.profession || "No especificada"}
                 </Typography>
 
                 <Button
@@ -132,9 +155,12 @@ export default function ProfilePage() {
                   </Typography>
                 ) : (
                   <List>
-                    {courses.map((course, index) => (
-                      <ListItem key={index} disablePadding>
-                        <ListItemText primary={course.name} secondary={course.description} />
+                    {courses.map((course, idx) => (
+                      <ListItem key={idx} disablePadding>
+                        <ListItemText
+                          primary={course.name}
+                          secondary={course.description}
+                        />
                       </ListItem>
                     ))}
                   </List>
@@ -156,7 +182,16 @@ export default function ProfilePage() {
                 />
               </Paper>
 
-              <SkillsList title="Tecnologías" skills={initialUser.skills} />
+              <SkillsList
+                title="Tecnologías"
+                skills={
+                  initialUser?.skills || [
+                    { name: "Software", level: 80 },
+                    { name: "Mobile App", level: 70 },
+                    { name: "Full Stack", level: 90 },
+                  ]
+                }
+              />
             </Stack>
           </Box>
         </Box>

@@ -1,14 +1,5 @@
-// src/pages/EditProfile.jsx
-import {
-  Box,
-  Container,
-  Paper,
-  Stack,
-  Typography,
-  TextField,
-  Button,
-  MenuItem,
-} from "@mui/material";
+import { Box, Container, Paper, Stack, Typography, TextField, Button, MenuItem, IconButton, Tooltip,} from "@mui/material";
+import LogoutIcon from "@mui/icons-material/Logout";
 import { COLORS } from "@/shared/config/colors";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
@@ -16,22 +7,23 @@ import { useProfileModel } from "@/features/profile/model/useProfileModel";
 import ProfileCard from "@/features/profile/ui/ProfileCard";
 import SectionTitle from "@/features/profile/ui/SectionTitle";
 import { profileApi } from "@/features/profile/api/profileApi";
+import { useAuth } from "@/context/AuthContext";
 
 export default function EditProfile() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const {
     state: { initialUser },
     actions: { fetchProfile },
   } = useProfileModel();
 
-  const fallbackFullName = useMemo(
-    () =>
-      (initialUser?.name ||
-        `${initialUser?.firstName ?? ""} ${initialUser?.lastName ?? ""}`.trim()
-      ).trim(),
-    [initialUser]
-  );
+  const fallbackFullName = useMemo(() => {
+    const n =
+      initialUser?.name ??
+      `${initialUser?.firstName ?? ""} ${initialUser?.lastName ?? ""}`;
+    return (n || "").trim();
+  }, [initialUser]);
 
   const [form, setForm] = useState({
     name: "",
@@ -42,17 +34,22 @@ export default function EditProfile() {
   });
 
   useEffect(() => {
-    if (!initialUser) return;
-    setForm((prev) => ({
-      ...prev,
+    if (!initialUser?.email) fetchProfile();
+  }, []);
+
+  useEffect(() => {
+    if (!initialUser?.email) return;
+    const birthdayISO = initialUser?.birthday
+      ? new Date(initialUser.birthday).toISOString().slice(0, 10)
+      : "";
+
+    setForm({
       name: fallbackFullName || "",
-      birthday: initialUser?.birthday
-        ? new Date(initialUser.birthday).toISOString().slice(0, 10) 
-        : "",
+      birthday: birthdayISO,
       gender: initialUser?.gender || "",
       profession: initialUser?.profession || "",
       bio: initialUser?.bio || "",
-    }));
+    });
   }, [initialUser, fallbackFullName]);
 
   const onChange = (e) => {
@@ -64,31 +61,60 @@ export default function EditProfile() {
     e.preventDefault();
     const payload = {
       name: (form.name || fallbackFullName).trim(),
-      birthday: form.birthday || "", 
+      birthday: form.birthday || "",
       gender: form.gender || "",
       profession: form.profession || "",
-      bio: (form.bio || "").slice(0, 150), 
+      bio: (form.bio || "").slice(0, 150),
     };
 
     try {
-      await profileApi.update(payload); 
+      await profileApi.update(payload);
       await fetchProfile();
-      navigate("/profile");            
+      navigate("/profile");
     } catch (err) {
       console.error("❌ Failed to update profile:", err);
     }
   };
 
-  const handleCancel = () => navigate("/profile");
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#fff" }}>
-      {/* Banner */}
-      <Box sx={{ bgcolor: COLORS.YELLOW, py: 2.5, mb: 4 }}>
-        <Container maxWidth="lg">
+      <Box
+        sx={{
+          bgcolor: COLORS.YELLOW,
+          py: 2.5,
+          mb: 4,
+          position: "relative",
+        }}
+      >
+        <Container
+          maxWidth="lg"
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: 2 }}>
             LEARNING WITH PYTHON
           </Typography>
+
+          <Tooltip title="Cerrar sesión">
+            <IconButton
+              onClick={handleLogout}
+              sx={{
+                color: "#000",
+                bgcolor: "#fff",
+                "&:hover": { bgcolor: "#f5f5f5" },
+              }}
+            >
+              <LogoutIcon />
+            </IconButton>
+          </Tooltip>
         </Container>
       </Box>
 
@@ -101,7 +127,7 @@ export default function EditProfile() {
             alignItems: "start",
           }}
         >
-          {/* LEFT: Profile Card */}
+          {/* LEFT preview card */}
           <ProfileCard
             name={form.name || fallbackFullName || "Tu nombre"}
             role={initialUser?.role || "student"}
@@ -110,10 +136,9 @@ export default function EditProfile() {
             avatarUrl={initialUser?.avatarUrl}
           />
 
-          {/* RIGHT: Edit form */}
+          {/* RIGHT editable form */}
           <Paper elevation={2} sx={{ p: 4, borderRadius: 3 }}>
             <SectionTitle>Editar Perfil</SectionTitle>
-
             <form onSubmit={handleSave}>
               <Stack spacing={2.5} sx={{ mt: 2 }}>
                 <TextField
@@ -144,7 +169,6 @@ export default function EditProfile() {
                 >
                   <MenuItem value="Masculino">Masculino</MenuItem>
                   <MenuItem value="Femenino">Femenino</MenuItem>
-                  <MenuItem value="Prefiero no decirlo">Prefiero no decirlo</MenuItem>
                 </TextField>
 
                 <TextField
@@ -178,10 +202,14 @@ export default function EditProfile() {
                       "&:hover": { bgcolor: "#15a822ff" },
                     }}
                   >
-                    Guardar cambios
+                    GUARDAR CAMBIOS
                   </Button>
-                  <Button variant="outlined" color="error" onClick={handleCancel}>
-                    Cancelar
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={() => navigate("/profile")}
+                  >
+                    CANCELAR
                   </Button>
                 </Stack>
               </Stack>

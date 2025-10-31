@@ -30,7 +30,7 @@ export function useProfileModel() {
     const avatarUrl = u.avatarUrl || u.profileImage || "";
     return {
       name: u.name || "",
-      role: u.role || "Software Developer",
+      role: u.role || "",
       email: u.email || "",
       bio: u.bio || "Bio",
       profileImage,
@@ -52,7 +52,7 @@ export function useProfileModel() {
 
   const [initialUser, setInitialUser] = useState({
     name: "",
-    role: "Software Developer",
+    role: "",
     email: "",
     bio: "Bio",
     profileImage: "",
@@ -84,7 +84,7 @@ export function useProfileModel() {
               name: user.firstName
                 ? `${user.firstName} ${user.lastName ?? ""}`.trim()
                 : user.name || "",
-              role: user.role || "Software Developer",
+              role: user.role || user.profession || "",
               email: user.email || "",
               bio: user.bio || "Bio",
               profileImage: user.profileImage || user.avatarUrl || "",

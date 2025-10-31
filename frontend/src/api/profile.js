@@ -11,8 +11,23 @@ const resolveUrl = (url) => {
 const normalizeUser = (u = {}) => {
   const profileImage = resolveUrl(u.profileImage || u.avatarUrl || "");
   const avatarUrl = resolveUrl(u.avatarUrl || u.profileImage || "");
-  return { ...u, profileImage, avatarUrl };
+
+  const name =
+    u.name ||
+    (u.firstName || u.lastName
+      ? `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim()
+      : "");
+
+  return {
+    ...u,
+    name,
+    firstName: u.firstName || "",
+    lastName: u.lastName || "",
+    profileImage,
+    avatarUrl,
+  };
 };
+
 
 export const profileApi = {
   async me() {

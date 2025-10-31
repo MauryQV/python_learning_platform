@@ -1,10 +1,18 @@
 import express from "express";
 import { verifyToken } from "../middleware/auth.middleware.js";
-import { getMe, updateMe } from "../controllers/profile.controller.js";
+import { avatarUpload } from "../middleware/upload.middleware.js";
+import { getMe, updateMe, uploadAvatar } from "../controllers/profile.controller.js";
 
 const router = express.Router();
 
 router.get("/", verifyToken, getMe);
+router.get("/me", verifyToken, getMe);
 router.put("/", verifyToken, updateMe);
+router.post(
+  "/avatar",
+  verifyToken,
+  avatarUpload.single("avatar"),
+  uploadAvatar
+);
 
 export default router;

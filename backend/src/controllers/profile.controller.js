@@ -1,3 +1,4 @@
+import prisma from "../../config/prismaClient.js";
 import { findProfileById, updateProfile as updateProfileRepo,} from "../repositories/user.repository.js";
 
 const toDateOrNull = (v) => (v ? new Date(`${v}T00:00:00.000Z`) : null);
@@ -68,5 +69,29 @@ export async function updateMe(req, res, next) {
     next(e);
   }
 }
+
+export const uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file)
+      return res.status(400).json({ message: "No file uploaded" });
+
+    const userId = getAuthUserId(req);
+    if (!userId)
+      return res.status(401).json({ message: "No authenticated user id" });
+
+    const publicUrl = `/uploads/avatars/${req.file.filename}`;
+
+    const user = await prisma.user.update({
+      where: { userId },
+      data: { profileImage: publicUrl },
+      select: { userId: true, profileImage: true },
+    });
+
+    return res.json({ ok: true, url: publicUrl, user });
+  } catch (err) {
+    console.error("uploadAvatar error:", err);
+    return res.status(500).json({ ok: false, message: "Upload failed" });
+  }
+};
 
 export const getProfileController = getMe;

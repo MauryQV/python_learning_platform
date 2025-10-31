@@ -1,16 +1,65 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { LIMITS } from "@/shared/config/limits";
-import { profileApi } from "@/features/profile/api/profileApi"; 
+import { profileApi } from "@/api/profile"; 
 import { useAuth } from "@/context/AuthContext";
 
 export function useProfileModel() {
   const { user } = useAuth();
+
+  const normalizeUser = (u) => {
+    if (!u || typeof u !== "object") {
+      return {
+        name: "",
+        role: "Software Developer",
+        email: "",
+        bio: "Bio",
+        profileImage: "",
+        avatarUrl: "",
+        birthday: "",
+        gender: "",
+        profession: "",
+        goals: ["Texto"],
+        skills: [
+          { label: "Software", value: 80 },
+          { label: "Mobile App", value: 70 },
+          { label: "Full Stack", value: 90 },
+        ],
+      };
+    }
+    const profileImage = u.profileImage || u.avatarUrl || "";
+    const avatarUrl = u.avatarUrl || u.profileImage || "";
+    return {
+      name: u.name || "",
+      role: u.role || "Software Developer",
+      email: u.email || "",
+      bio: u.bio || "Bio",
+      profileImage,
+      avatarUrl,
+      birthday: u.birthday || "",
+      gender: u.gender || "",
+      profession: u.profession || "",
+      goals: Array.isArray(u.goals) ? u.goals : ["Texto"],
+      skills:
+        Array.isArray(u.skills) && u.skills.length
+          ? u.skills
+          : [
+              { label: "Software", value: 80 },
+              { label: "Mobile App", value: 70 },
+              { label: "Full Stack", value: 90 },
+            ],
+    };
+  };
+
   const [initialUser, setInitialUser] = useState({
     name: "",
     role: "Software Developer",
     email: "",
     bio: "Bio",
-    avatarUrl: "",
+    profileImage: "",
+    avatarUrl: "", 
+    birthday: "",
+    gender: "",
+    profession: "",
     goals: ["Texto"],
     skills: [
       { label: "Software", value: 80 },
@@ -38,7 +87,11 @@ export function useProfileModel() {
               role: user.role || "Software Developer",
               email: user.email || "",
               bio: user.bio || "Bio",
-              avatarUrl: user.avatarUrl || "",
+              profileImage: user.profileImage || user.avatarUrl || "",
+              avatarUrl: user.avatarUrl || user.profileImage || "",
+              birthday: user.birthday || "",
+              gender: user.gender || "",
+              profession: user.profession || "",
               goals: user.goals || ["Texto"],
               skills:
                 user.skills || [
@@ -47,13 +100,14 @@ export function useProfileModel() {
                   { label: "Full Stack", value: 90 },
                 ],
             }
-          : await profileApi.me();
+          : await profileApi.me(); 
 
         if (!mounted) return;
 
-        setInitialUser(base);
-        setForm({ name: base.name || "", bio: base.bio || "" });
-        setGoals(Array.isArray(base.goals) ? base.goals : ["Texto"]);
+        const norm = normalizeUser(base);
+        setInitialUser(norm);
+        setForm({ name: norm.name || "", bio: norm.bio || "" });
+        setGoals(Array.isArray(norm.goals) ? norm.goals : ["Texto"]);
       } catch {
         setError("No se pudo cargar el perfil");
       }
@@ -65,10 +119,11 @@ export function useProfileModel() {
 
   const fetchProfile = async () => {
     try {
-      const data = await profileApi.me(); 
-      setInitialUser(data);
-      setForm({ name: data.name || "", bio: data.bio || "" });
-      setGoals(Array.isArray(data.goals) ? data.goals : ["Texto"]);
+      const data = await profileApi.me();
+      const norm = normalizeUser(data); 
+      setInitialUser(norm);
+      setForm({ name: norm.name || "", bio: norm.bio || "" });
+      setGoals(Array.isArray(norm.goals) ? norm.goals : ["Texto"]);
     } catch (e) {
       console.error("Failed to fetch profile:", e);
       setError("No se pudo actualizar el perfil");
@@ -160,7 +215,7 @@ export function useProfileModel() {
       addGoal,
       removeGoal,
       onGoalKey,
-      fetchProfile, 
+      fetchProfile,
     },
     ui: {
       sectionTitleProps,

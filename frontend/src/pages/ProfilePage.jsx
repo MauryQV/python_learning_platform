@@ -37,7 +37,6 @@ export default function ProfilePage() {
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#fff" }}>
-      {/* Banner with logout icon */}
       <Box
         sx={{
           bgcolor: COLORS.YELLOW,
@@ -58,7 +57,6 @@ export default function ProfilePage() {
             LEARNING WITH PYTHON
           </Typography>
 
-          {/* Logout Icon */}
           <Tooltip title="Cerrar sesión">
             <IconButton
               onClick={handleLogout}
@@ -89,7 +87,7 @@ export default function ProfilePage() {
             role={initialUser?.role || "student"}
             email={initialUser?.email}
             bio={initialUser?.bio || "Bio"}
-            avatarUrl={initialUser?.avatarUrl}
+            avatarUrl={initialUser?.profileImage} 
           />
 
           {/* RIGHT: two columns */}

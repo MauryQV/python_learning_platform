@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import adminRoutes from "./src/routes/admin.route.js";
 import authRoutes from "./src/routes/auth.route.js";
 import profileRoutes from "./src/routes/profile.route.js";
@@ -13,9 +15,13 @@ dotenv.config();
 export const app = express();
 const PORT = process.env.PORT || 2999;
 
-const allowedOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 app.use(morgan("dev"));
+app.use(express.json());
+
+const allowedOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
 
 app.use(
   cors({
@@ -38,23 +44,22 @@ app.use(
   })
 );
 
-app.get("/api/health", (req, res) => {
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
+app.get("/", (_req, res) => res.send("Backend running")); 
+app.get("/api/health", (_req, res) => {
   res.status(200).json({ message: "SRIVEEEE" });
 });
 
-app.use(express.json());
-
 app.use("/api/auth", authRoutes);
-
 app.use("/api/profile", profileRoutes);
-
 app.use("/api/admin", adminRoutes);
-
 app.use("/api/roles", roleRoutes);
+
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-  console.log(` emoji de cohetecito running on http://localhost:${PORT}`);
+  console.log(`🚀 Cohetecito 100% real no fake 🚀 http://localhost:${PORT}`);
 });
 
 export default app;

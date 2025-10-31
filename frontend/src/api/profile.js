@@ -28,20 +28,22 @@ const normalizeUser = (u = {}) => {
   };
 };
 
-
 export const profileApi = {
   async me() {
     const res = await api.get("/profile/me");
     return normalizeUser(res.data);
   },
+
   async getMe() {
     const res = await api.get("/profile/me");
     return normalizeUser(res.data);
   },
+
   async update(data) {
     const res = await api.put("/profile", data);
     return normalizeUser(res.data);
   },
+
   async uploadAvatar(file) {
     const form = new FormData();
     form.append("avatar", file);
@@ -50,5 +52,10 @@ export const profileApi = {
     });
     const url = resolveUrl(res.data?.url || "");
     return { url };
+  },
+
+  async deleteAvatar() {
+    const res = await api.delete("/profile/avatar");
+    return res.data;
   },
 };

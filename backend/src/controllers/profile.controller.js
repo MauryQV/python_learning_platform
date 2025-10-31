@@ -1,8 +1,9 @@
+import path from "path";
+import fs from "fs/promises";
 import prisma from "../../config/prismaClient.js";
 import { findProfileById, updateProfile as updateProfileRepo,} from "../repositories/user.repository.js";
 
 const toDateOrNull = (v) => (v ? new Date(`${v}T00:00:00.000Z`) : null);
-
 const clip = (s, n) => (typeof s === "string" ? s.slice(0, n) : s);
 
 function getAuthUserId(req) {
@@ -17,18 +18,16 @@ function getAuthUserId(req) {
 export async function getMe(req, res, next) {
   try {
     const userId = getAuthUserId(req);
-    if (!userId) {
+    if (!userId)
       return res
         .status(401)
         .json({ success: false, message: "No authenticated user id in token" });
-    }
 
     const me = await findProfileById(userId);
-    if (!me) {
+    if (!me)
       return res
         .status(404)
         .json({ success: false, message: "Usuario no encontrado" });
-    }
 
     return res.status(200).json(me);
   } catch (e) {
@@ -39,11 +38,10 @@ export async function getMe(req, res, next) {
 export async function updateMe(req, res, next) {
   try {
     const userId = getAuthUserId(req);
-    if (!userId) {
+    if (!userId)
       return res
         .status(401)
         .json({ success: false, message: "No authenticated user id in token" });
-    }
 
     const { name, birthday, gender, profession, bio } = req.body;
 
@@ -91,6 +89,56 @@ export const uploadAvatar = async (req, res) => {
   } catch (err) {
     console.error("uploadAvatar error:", err);
     return res.status(500).json({ ok: false, message: "Upload failed" });
+  }
+};
+
+export const deleteAvatar = async (req, res, next) => {
+  try {
+    const userId = getAuthUserId(req);
+    if (!userId)
+      return res.status(401).json({ message: "No authenticated user id" });
+
+    const user = await prisma.user.findUnique({
+      where: { userId },
+      select: { profileImage: true },
+    });
+
+    if (!user)
+      return res.status(404).json({ message: "Usuario no encontrado" });
+
+    const current = user.profileImage || "";
+
+    if (current && /^\/uploads\//.test(current)) {
+      try {
+        const abs = path.join(process.cwd(), current.replace(/^\//, ""));
+        await fs.unlink(abs);
+      } catch (err) {
+        console.warn("⚠️ Avatar delete warning:", err?.message);
+      }
+    }
+
+    const updated = await prisma.user.update({
+      where: { userId },
+      data: { profileImage: null },
+      select: {
+        userId: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        name: true,
+        bio: true,
+        profileImage: true,
+        role: true,
+        goals: true,
+        gender: true,
+        birthday: true,
+        profession: true,
+      },
+    });
+
+    return res.json({ success: true, user: updated });
+  } catch (err) {
+    next(err);
   }
 };
 

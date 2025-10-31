@@ -1,8 +1,11 @@
-import { Box, Container, Paper, Stack, Typography, TextField, Button, MenuItem, IconButton, Tooltip, Avatar,} from "@mui/material";
+import { Box, Container, Paper, Stack, Typography, TextField, Button, MenuItem, IconButton, Tooltip, Menu,} from "@mui/material";
 import LogoutIcon from "@mui/icons-material/Logout";
+import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
+import DeleteIcon from "@mui/icons-material/Delete";
+import UploadIcon from "@mui/icons-material/Upload";
 import { COLORS } from "@/shared/config/colors";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useProfileModel } from "@/features/profile/model/useProfileModel";
 import ProfileCard from "@/features/profile/ui/ProfileCard";
 import SectionTitle from "@/features/profile/ui/SectionTitle";
@@ -35,6 +38,8 @@ export default function EditProfile() {
 
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState("");
+  const [menuAnchor, setMenuAnchor] = useState(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (!initialUser?.email) fetchProfile();
@@ -83,7 +88,7 @@ export default function EditProfile() {
         gender: form.gender || "",
         profession: form.profession || "",
         bio: (form.bio || "").slice(0, 150),
-        profileImage, // ✅ normalized key
+        profileImage,
       };
 
       await profileApi.update(payload);
@@ -99,8 +104,31 @@ export default function EditProfile() {
     navigate("/login");
   };
 
+  const handleMenuOpen = (e) => setMenuAnchor(e.currentTarget);
+  const handleMenuClose = () => setMenuAnchor(null);
+  const hasPhoto = Boolean(avatarPreview || initialUser?.profileImage);
+
+  const triggerUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleDeleteAvatar = async () => {
+    try {
+      await profileApi.deleteAvatar();
+      setAvatarPreview("");
+      setAvatarFile(null);
+      await profileApi.update({ profileImage: "" });
+      await fetchProfile();
+    } catch (err) {
+      console.error("❌ Failed to delete avatar:", err);
+    } finally {
+      handleMenuClose();
+    }
+  };
+
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#fff" }}>
+      {/* HEADER */}
       <Box
         sx={{
           bgcolor: COLORS.YELLOW,
@@ -145,35 +173,74 @@ export default function EditProfile() {
             alignItems: "start",
           }}
         >
-          {/* LEFT preview card */}
-          <ProfileCard
-            name={form.name || fallbackFullName || "Tu nombre"}
-            role={initialUser?.role || "student"}
-            email={initialUser?.email}
-            bio={form.bio || ""}
-            avatarUrl={avatarPreview || initialUser?.profileImage}
-          />
+          {/* LEFT: Profile Card with camera icon */}
+          <Box sx={{ position: "relative" }}>
+            <ProfileCard
+              name={form.name || fallbackFullName || "Tu nombre"}
+              role={initialUser?.role || "student"}
+              email={initialUser?.email}
+              bio={form.bio || ""}
+              avatarUrl={avatarPreview || initialUser?.profileImage}
+            />
 
-          {/* RIGHT editable form */}
+            {/* Hidden input for upload */}
+            <input
+              ref={fileInputRef}
+              hidden
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                onPickAvatar(e);
+                handleMenuClose();
+              }}
+            />
+
+            {/* 📸 Icon + Menu */}
+            <IconButton
+              aria-label="Opciones de foto"
+              onClick={handleMenuOpen}
+              sx={{
+                position: "absolute",
+                top: 70,
+                left: "calc(50% + 70px)",
+                transform: "translate(-50%, -50%)",
+                bgcolor: "#fff",
+                border: `2px solid ${COLORS.YELLOW}`,
+                boxShadow: 2,
+                "&:hover": { bgcolor: "#f7f7f7" },
+                width: 40,
+                height: 40,
+              }}
+            >
+              <PhotoCameraIcon />
+            </IconButton>
+
+            <Menu
+              anchorEl={menuAnchor}
+              open={Boolean(menuAnchor)}
+              onClose={handleMenuClose}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
+            >
+              {/* Always allow upload */}
+              <MenuItem onClick={triggerUpload}>
+                <UploadIcon sx={{ mr: 1 }} />
+                Subir foto
+              </MenuItem>
+
+              {/* Delete only if there is a photo */}
+              {hasPhoto && (
+                <MenuItem onClick={handleDeleteAvatar}>
+                  <DeleteIcon sx={{ mr: 1 }} />
+                  Borrar foto
+                </MenuItem>
+              )}
+            </Menu>
+          </Box>
+
+          {/* RIGHT: Form */}
           <Paper elevation={2} sx={{ p: 4, borderRadius: 3 }}>
             <SectionTitle>Editar Perfil</SectionTitle>
-
-            <Stack spacing={1} alignItems="center" sx={{ mb: 2, mt: 1 }}>
-              <Avatar
-                src={avatarPreview || initialUser?.profileImage || ""}
-                alt={form.name || "Avatar"}
-                sx={{ width: 112, height: 112 }}
-              />
-              <Button variant="outlined" component="label">
-                Elegir foto
-                <input hidden type="file" accept="image/*" onChange={onPickAvatar} />
-              </Button>
-              {!!avatarFile && (
-                <Typography variant="caption" color="text.secondary">
-                  {avatarFile.name} ({Math.round(avatarFile.size / 1024)} KB)
-                </Typography>
-              )}
-            </Stack>
 
             <form onSubmit={handleSave}>
               <Stack spacing={2.5} sx={{ mt: 2 }}>

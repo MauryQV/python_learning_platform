@@ -7,6 +7,9 @@ import {
 } from "@mui/material";
 import { Refresh as RefreshIcon } from "@mui/icons-material";
 
+// NUEVO: celda reutilizable para permisos de docente
+import TeacherPermissionsCell from "@/features/admin/ui/TeacherPermissionsCell";
+
 const YELLOW = "#F6D458";
 
 /* ---------- Roles helpers ---------- */
@@ -31,6 +34,13 @@ const getPrimaryRole = (user) => {
   const roles = getAllRoles(user);
   if (roles.includes("admin")) return "admin";
   return roles[0] || "user";
+};
+
+// Helper para detectar docentes (teacher/instructor)
+const isTeacherUser = (user) => {
+  const roles = getAllRoles(user);
+  const pr = getPrimaryRole(user);
+  return roles.includes("teacher") || roles.includes("instructor") || pr === "teacher" || pr === "instructor";
 };
 
 const roleColor = (role) => {
@@ -64,8 +74,13 @@ function AdminUsersTable({
   onChangeRole,       // (id, nextRole:string)
   allowedRoles = [],
   loadingRoles = false,
-  isUpdatingId = null
+  isUpdatingId = null,
+  // Opcional: lista disponible de permisos de docente
+  teacherPermissionOptions = ["teacher_editor", "teacher_executor"],
 }) {
+  // ¿existe al menos un docente en la tabla?
+  const anyTeacher = Array.isArray(users) && users.some(isTeacherUser);
+
   return (
     <Paper sx={{ p: 3, borderRadius: 3 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
@@ -90,7 +105,13 @@ function AdminUsersTable({
                 <TableCell><strong>Nombre</strong></TableCell>
                 <TableCell><strong>Email</strong></TableCell>
                 <TableCell><strong>Roles</strong></TableCell>
-                <TableCell width={260}><strong>Cambiar rol</strong></TableCell>
+                <TableCell width={220}><strong>Cambiar rol</strong></TableCell>
+
+                {/* Columna de permisos solo si hay docentes */}
+                {anyTeacher && (
+                  <TableCell width={260}><strong>Permisos (Docente)</strong></TableCell>
+                )}
+
                 <TableCell><strong>Estado</strong></TableCell>
                 <TableCell align="center"><strong>Acciones</strong></TableCell>
               </TableRow>
@@ -100,7 +121,10 @@ function AdminUsersTable({
               {Array.isArray(users) && users.length > 0 ? (
                 users.map((user) => {
                   const id = user?.userId ?? user?.id ?? user?._id;
-                  console.log("Usuario:", id, "→ status:", user.status, "statusNormalized:", user.statusNormalized, "isActive:", user.isActive);
+
+                  // Logs de depuración (puedes quitar cuando confirmes)
+                  // console.log("Usuario:", id, "→ status:", user.status, "statusNormalized:", user.statusNormalized, "isActive:", user.isActive);
+
                   const roles = getAllRoles(user);
                   const primaryRole = getPrimaryRole(user);
 
@@ -163,6 +187,21 @@ function AdminUsersTable({
                         </FormControl>
                       </TableCell>
 
+                      {/* PERMISOS DOCENTE (solo si hay docentes en la tabla) */}
+                      {anyTeacher && (
+                        <TableCell>
+                          {isTeacherUser(user) ? (
+                            <TeacherPermissionsCell
+                              teacherId={id}
+                              available={teacherPermissionOptions}
+                              disabled={rowDisabled}
+                            />
+                          ) : (
+                            <Typography variant="body2" color="text.disabled">—</Typography>
+                          )}
+                        </TableCell>
+                      )}
+
                       {/* estado */}
                       <TableCell>
                         <Chip
@@ -189,7 +228,7 @@ function AdminUsersTable({
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} align="center">
+                  <TableCell colSpan={anyTeacher ? 8 : 7} align="center">
                     No hay usuarios registrados.
                   </TableCell>
                 </TableRow>

@@ -1,13 +1,21 @@
 import path from "path";
 import fs from "fs/promises";
 import prisma from "../../config/prismaClient.js";
-import { findProfileById, updateProfile as updateProfileRepo,} from "../repositories/user.repository.js";
+import {
+  findProfileById,
+  updateProfile as updateProfileRepo,
+} from "../repositories/user.repository.js";
 
 const toDateOrNull = (v) => (v ? new Date(`${v}T00:00:00.000Z`) : null);
 const clip = (s, n) => (typeof s === "string" ? s.slice(0, n) : s);
 
 function getAuthUserId(req) {
-  const candidates = [req.user?.userId, req.userId, req.user?.id, req.user?.sub];
+  const candidates = [
+    req.user?.userId,
+    req.userId,
+    req.user?.id,
+    req.user?.sub,
+  ];
   for (const c of candidates) {
     const n = Number(c);
     if (!Number.isNaN(n) && Number.isInteger(n)) return n;
@@ -70,8 +78,7 @@ export async function updateMe(req, res, next) {
 
 export const uploadAvatar = async (req, res) => {
   try {
-    if (!req.file)
-      return res.status(400).json({ message: "No file uploaded" });
+    if (!req.file) return res.status(400).json({ message: "No file uploaded" });
 
     const userId = getAuthUserId(req);
     if (!userId)

@@ -121,7 +121,7 @@ const baseSelect = {
   birthday: true,
   gender: true,
   profession: true,
-  bio: true, 
+  bio: true,
 };
 
 export const findProfileById = async (userId) => {
@@ -135,12 +135,12 @@ export const updateProfile = async (userId, data) => {
   return await prisma.user.update({
     where: { userId },
     data: {
-      firstName:  data.firstName ?? undefined,
-      lastName:   data.lastName ?? undefined,
-      birthday:   data.birthday ?? undefined, 
-      gender:     data.gender ?? undefined,
+      firstName: data.firstName ?? undefined,
+      lastName: data.lastName ?? undefined,
+      birthday: data.birthday ?? undefined,
+      gender: data.gender ?? undefined,
       profession: data.profession ?? undefined,
-      bio:        data.bio ?? undefined,      
+      bio: data.bio ?? undefined,
     },
     select: baseSelect,
   });

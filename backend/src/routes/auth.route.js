@@ -1,6 +1,15 @@
 import express from "express";
-import { validateRegister, validateLogin,} from "../middleware/validation.middleware.js";
-import { registerController, loginController, loginWithGoogleController, registerWithGoogleController, verifyEmailController,} from "../controllers/auth.controller.js";
+import {
+  validateRegister,
+  validateLogin,
+} from "../middleware/validation.middleware.js";
+import {
+  registerController,
+  loginController,
+  loginWithGoogleController,
+  registerWithGoogleController,
+  verifyEmailController,
+} from "../controllers/auth.controller.js";
 
 const router = express.Router();
 

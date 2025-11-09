@@ -10,8 +10,7 @@ const storage = multer.diskStorage({
 
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname || "");
-    const userId =
-      req?.user?.userId ?? req?.user?.id ?? "user"; 
+    const userId = req?.user?.userId ?? req?.user?.id ?? "user";
     const uniqueName = `${userId}-${Date.now()}${ext}`;
     cb(null, uniqueName);
   },

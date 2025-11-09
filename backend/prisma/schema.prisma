@@ -25,14 +25,18 @@ model User {
   isVerified         Boolean                  @default(false)
   emailVerifiedAt    DateTime?
   verificationTokens EmailVerificationToken[]
+  googleId           String?                  @unique
+  profileImage       String?
+  birthday           DateTime?
+  gender             String?
+  profession         String?
+  bio                String?                  @db.VarChar(150)
+  courses            Course[]
 
-  googleId     String? @unique
-  profileImage String? // URL de la imagen del perfil (de Google)
-
-  birthday   DateTime?
-  gender     String?
-  profession String?
-  bio        String?   @db.VarChar(150)
+  @@index([status])
+  @@index([email, status])
+  @@index([registeredAt])
+  @@index([isVerified])
 }
 
 model Role {
@@ -51,6 +55,8 @@ model UserRole {
   user       User     @relation(fields: [userId], references: [userId])
 
   @@id([userId, roleId])
+  @@index([roleId])
+  @@index([assignedAt])
 }
 
 model RolePermission {
@@ -66,22 +72,30 @@ model UserPermission {
   userId     Int
   permission String
   assignedAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [userId])
+  user       User     @relation(fields: [userId], references: [userId])
 
   @@id([userId, permission])
 }
 
 model Course {
-  courseId    Int          @id @default(autoincrement())
+  courseId    Int       @id @default(autoincrement())
   name        String
   description String?
   startDate   DateTime
   endDate     DateTime?
-  status      String       @default("active")
-  diagnostics Diagnostic[]
+  status      String    @default("active")
+  code        String    @unique // Código para inscripción del curso
+  teacherId   Int?
+
+  teacher     User?        @relation(fields: [teacherId], references: [userId])
+  topics      Topic[]
   enrollments Enrollment[]
-  modules     Module[]
+  diagnostics Diagnostic[]
+
+  @@index([status])
+  @@index([startDate])
+  @@index([endDate])
+  @@index([status, startDate])
 }
 
 model Enrollment {
@@ -90,31 +104,45 @@ model Enrollment {
   courseId     Int
   enrolledAt   DateTime @default(now())
   status       String   @default("active")
-  course       Course   @relation(fields: [courseId], references: [courseId])
-  user         User     @relation(fields: [userId], references: [userId])
+
+  course Course @relation(fields: [courseId], references: [courseId])
+  user   User   @relation(fields: [userId], references: [userId])
+
+  @@index([userId])
+  @@index([courseId])
+  @@index([status])
+  @@index([userId, courseId, status])
 }
 
-model Module {
-  moduleId    Int     @id @default(autoincrement())
-  courseId    Int
-  title       String
-  description String?
-  order       Int
-  course      Course  @relation(fields: [courseId], references: [courseId])
-  topics      Topic[]
-}
+/**
+ * model Module {
+ * moduleId    Int     @id @default(autoincrement())
+ * courseId    Int
+ * title       String
+ * description String?
+ * order       Int
+ * course      Course  @relation(fields: [courseId], references: [courseId])
+ * topics      Topic[]
+ * @@index([courseId])
+ * @@index([courseId, order])
+ * }
+ */
 
 model Topic {
   topicId     Int             @id @default(autoincrement())
-  moduleId    Int
+  courseId    Int
   title       String
   description String?
-  order       Int
+  order       Int?
   exercises   Exercise[]
   media       MediaAsset[]
   submissions Submission[]
-  module      Module          @relation(fields: [moduleId], references: [moduleId])
   progresses  TopicProgress[]
+
+  course Course @relation(fields: [courseId], references: [courseId])
+
+  @@index([courseId])
+  @@index([order])
 }
 
 model MediaAsset {
@@ -124,6 +152,9 @@ model MediaAsset {
   url         String
   description String?
   topic       Topic   @relation(fields: [topicId], references: [topicId])
+
+  @@index([topicId])
+  @@index([type])
 }
 
 model Exercise {
@@ -135,6 +166,10 @@ model Exercise {
   correctAnswer   String?
   attempts        Attempt[]
   topic           Topic     @relation(fields: [topicId], references: [topicId])
+
+  @@index([topicId])
+  @@index([type])
+  @@index([difficultyLevel])
 }
 
 model Attempt {
@@ -147,6 +182,12 @@ model Attempt {
   scoreObtained Int?
   exercise      Exercise @relation(fields: [exerciseId], references: [exerciseId])
   user          User     @relation(fields: [userId], references: [userId])
+
+  @@index([userId])
+  @@index([exerciseId])
+  @@index([attemptedAt])
+  @@index([userId, exerciseId])
+  @@index([result])
 }
 
 model Submission {
@@ -159,6 +200,11 @@ model Submission {
   feedback     String?
   topic        Topic    @relation(fields: [topicId], references: [topicId])
   user         User     @relation(fields: [userId], references: [userId])
+
+  @@index([userId])
+  @@index([topicId])
+  @@index([submittedAt])
+  @@index([userId, topicId])
 }
 
 model TopicProgress {
@@ -171,6 +217,12 @@ model TopicProgress {
   progressPercent Int       @default(0)
   topic           Topic     @relation(fields: [topicId], references: [topicId])
   user            User      @relation(fields: [userId], references: [userId])
+
+  @@index([userId])
+  @@index([topicId])
+  @@index([status])
+  @@index([userId, topicId])
+  @@index([completedAt])
 }
 
 model Diagnostic {
@@ -182,6 +234,11 @@ model Diagnostic {
   recommendedLevel String?
   course           Course   @relation(fields: [courseId], references: [courseId])
   user             User     @relation(fields: [userId], references: [userId])
+
+  @@index([userId])
+  @@index([courseId])
+  @@index([takenAt])
+  @@index([userId, courseId])
 }
 
 model EmailVerificationToken {

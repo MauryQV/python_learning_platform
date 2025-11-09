@@ -26,9 +26,9 @@ export const verifyToken = (req, res, next) => {
       });
     }
 
-    req.userId = userId; 
+    req.userId = userId;
     req.user = {
-      userId, 
+      userId,
       id: userId,
       email,
       role,
@@ -39,9 +39,7 @@ export const verifyToken = (req, res, next) => {
     return res.status(401).json({
       success: false,
       message:
-        error.message === "expired Token"
-          ? "Token expirado"
-          : "Token inválido",
+        error.message === "expired Token" ? "Token expirado" : "Token inválido",
     });
   }
 };

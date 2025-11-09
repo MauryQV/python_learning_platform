@@ -18,7 +18,6 @@ describe("Admin Service", () => {
     jest.clearAllMocks();
   });
 
-
   describe("updateUserRoleService", () => {
     it("debería actualizar el rol de un usuario correctamente", async () => {
       const mockUser = { id: 1, email: "test@correo.com", role: "tutor" };

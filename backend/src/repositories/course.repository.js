@@ -1,57 +1,60 @@
-import prisma from "../../config/prismaClient.js"
+import prisma from "../../config/prismaClient.js";
 
-export const createCourse = async(name,description,startDate,endDate,code) => {
+export const createCourse = async (
+  name,
+  description,
+  startDate,
+  endDate,
+  code
+) => {
   return await prisma.course.create({
     data: {
       name,
       description,
       startDate,
       endDate,
-      code
-    }
-  })
-}
-
-
+      code,
+    },
+  });
+};
 
 export const getAllCourses = async () => {
-    const courses = await prisma.course.findMany({
-      include: {
-        teacher: {
-          select: {
-            userId: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
-        },
-        _count: {
-          select: { enrollments: true }, 
+  const courses = await prisma.course.findMany({
+    include: {
+      teacher: {
+        select: {
+          userId: true,
+          firstName: true,
+          lastName: true,
+          email: true,
         },
       },
-      orderBy: { courseId: "asc" },
-    });
+      _count: {
+        select: { enrollments: true },
+      },
+    },
+    orderBy: { courseId: "asc" },
+  });
 
-    // Mapeo limpio para la respuesta
-    return courses.map((course) => ({
-      id: course.courseId,
-      name: course.name,
-      description: course.description,
-      startDate: course.startDate,
-      endDate: course.endDate,
-      status: course.status,
-      code: course.code,
-      teacher: course.teacher
-        ? {
-            id: course.teacher.userId,
-            name: `${course.teacher.firstName} ${course.teacher.lastName}`,
-            email: course.teacher.email,
-          }
-        : { name: "Sin docente asignado" },
-      numeroEstudiantes: course._count.enrollments,
-    }));
-  }
-  
+  // Mapeo limpio para la respuesta
+  return courses.map((course) => ({
+    id: course.courseId,
+    name: course.name,
+    description: course.description,
+    startDate: course.startDate,
+    endDate: course.endDate,
+    status: course.status,
+    code: course.code,
+    teacher: course.teacher
+      ? {
+          id: course.teacher.userId,
+          name: `${course.teacher.firstName} ${course.teacher.lastName}`,
+          email: course.teacher.email,
+        }
+      : { name: "Sin docente asignado" },
+    numeroEstudiantes: course._count.enrollments,
+  }));
+};
 
 export const assignTeacherToCourse = async (courseId, teacherId) => {
   return await prisma.course.update({
@@ -91,16 +94,16 @@ export const findCourseById = async (courseId) => {
  */
 export const getCoursesByTeacher = async (teacherId) => {
   return await prisma.course.findMany({
-    where: { 
+    where: {
       teacherId,
-      status: 'active' 
+      status: "active",
     },
     include: {
       _count: {
         select: { enrollments: true },
       },
     },
-    orderBy: { startDate: 'desc' },
+    orderBy: { startDate: "desc" },
   });
 };
 
@@ -113,5 +116,3 @@ export const removeTeacherFromCourse = async (courseId) => {
     data: { teacherId: null },
   });
 };
-
-

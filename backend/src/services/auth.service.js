@@ -4,7 +4,7 @@ import tokenService from "../auth/tokenService.js";
 import { verifyGoogleToken } from "../auth/verifyGoogleToken.js";
 import crypto from "crypto";
 import { nanoid } from "nanoid";
-import prisma  from "../../config/prismaClient.js";
+import prisma from "../../config/prismaClient.js";
 import { sendVerificationEmail } from "../services/mail.service.js";
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
@@ -16,7 +16,6 @@ const minutesFromNow = (m = 60) => {
   d.setMinutes(d.getMinutes() + m);
   return d;
 };
-
 
 async function createAndDispatchEmailVerification(user) {
   const rawToken = nanoid(64);
@@ -67,10 +66,9 @@ export const register = async ({ firstName, lastName, email, password }) => {
   return {
     token,
     user: newUser,
-    needsVerification: true, 
+    needsVerification: true,
   };
 };
-
 
 export const login = async (email) => {
   const user = await userRepository.findByEmailWithRoles(email);
@@ -158,7 +156,6 @@ export const updateUserRole = async (userId, newRole) => {
   return user;
 };
 
-
 export const verifyEmailToken = async (rawToken) => {
   if (!rawToken) return { ok: false, reason: "missing-token" };
 
@@ -179,7 +176,7 @@ export const verifyEmailToken = async (rawToken) => {
       data: { isVerified: true, emailVerifiedAt: new Date() },
     }),
     prisma.emailVerificationToken.update({
-      where: { tokenId: tokenRow.tokenId }, 
+      where: { tokenId: tokenRow.tokenId },
       data: { used: true },
     }),
   ]);

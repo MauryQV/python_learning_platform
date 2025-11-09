@@ -1,13 +1,12 @@
 import * as authService from "../services/auth.service.js";
-import { sendMail } from "../services/mail.service.js";
-
 
 export const registerController = async (req, res, next) => {
   try {
     const data = await authService.register(req.body);
     res.status(201).json({
       success: true,
-      message: "Usuario registrado exitosamente. Revisa tu email para verificar tu cuenta.",
+      message:
+        "Usuario registrado exitosamente. Revisa tu email para verificar tu cuenta.",
       ...data,
     });
   } catch (err) {
@@ -132,5 +131,3 @@ export const verifyEmailController = async (req, res, next) => {
     next(err);
   }
 };
-
-

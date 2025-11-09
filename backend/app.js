@@ -8,12 +8,11 @@ import authRoutes from "./src/routes/auth.route.js";
 import profileRoutes from "./src/routes/profile.route.js";
 import roleRoutes from "./src/routes/role.route.js";
 import teacherPermissionRoutes from "./src/routes/teacherPermission.route.js";
-import courseRoutes from "./src/routes/course.route.js"
-import teacherRoutes from "./src/routes/teacher.route.js"
+import courseRoutes from "./src/routes/course.route.js";
+import teacherRoutes from "./src/routes/teacher.route.js";
 import { errorHandler } from "./src/middleware/error.middleware.js";
 
 dotenv.config();
-
 
 export const app = express();
 const PORT = process.env.PORT || 2999;
@@ -61,8 +60,6 @@ app.use("/api/teacher", teacherPermissionRoutes);
 app.use("/api/course", courseRoutes);
 
 app.use("/api/teacher", teacherRoutes);
-
-
 
 app.use(errorHandler);
 

@@ -3,7 +3,7 @@ import {
   addPermission,
   removePermission,
   getUserPermissions,
-  hasRole
+  hasRole,
 } from "../repositories/userPermission.repository.js";
 import { updateUserRoleRepository } from "../repositories/admin.repository.js";
 
@@ -36,7 +36,7 @@ export const assignTeacherPermissions = async (teacherId, permissions = []) => {
   return {
     message: "Permissions asigned successfully",
     assigned,
-    current: current.map((p) => p.permission)
+    current: current.map((p) => p.permission),
   };
 };
 
@@ -62,7 +62,7 @@ export const revokeTeacherPermissions = async (teacherId, permissions = []) => {
       await removePermission(teacherId, permission);
       revoked.push(permission);
     } catch (err) {
-      // Ignorar si no tenía ese permiso
+      console.log(err);
     }
   }
 
@@ -71,11 +71,9 @@ export const revokeTeacherPermissions = async (teacherId, permissions = []) => {
   return {
     message: "Permissions revoked successfully",
     revoked,
-    current: current.map((p) => p.permission)
+    current: current.map((p) => p.permission),
   };
 };
-
-
 
 export const getTeacherPermissions = async (teacherId) => {
   const isTeacher = await hasRole(teacherId, "teacher");

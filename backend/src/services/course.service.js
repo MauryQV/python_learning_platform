@@ -2,40 +2,49 @@ import {
   createCourse,
   getAllCourses,
   assignTeacherToCourse,
-  removeTeacherFromCourse
-} from "../repositories/course.repository.js"
+  removeTeacherFromCourse,
+} from "../repositories/course.repository.js";
 
-
-export const createCourseService = async (name, description, startDate, endDate, code) => {
-  const course = await createCourse(name, description, startDate, endDate, code);
+export const createCourseService = async (
+  name,
+  description,
+  startDate,
+  endDate,
+  code
+) => {
+  const course = await createCourse(
+    name,
+    description,
+    startDate,
+    endDate,
+    code
+  );
   return {
     message: "Course created succesfully",
     course,
   };
-
-}
+};
 
 export const getAllCoursesService = async () => {
   const courses = await getAllCourses();
   return {
     message: "All courses",
-    courses
+    courses,
+  };
+};
 
-  }
-}
-
-export const assignTeacherToCourseService = async(courseId, teacherId) => {
+export const assignTeacherToCourseService = async (courseId, teacherId) => {
   const course = await assignTeacherToCourse(courseId, teacherId);
   return {
     message: "Course assigned",
-    course
-  }
-}
+    course,
+  };
+};
 
-export const removeTeacherFromCourseService = async(courseId) => {
+export const removeTeacherFromCourseService = async (courseId) => {
   const result = await removeTeacherFromCourse(courseId);
-  return{
+  return {
     message: "Teacher deleted",
-    result
-  }
-}
+    result,
+  };
+};

@@ -1,4 +1,4 @@
-import { Box, Container, Paper, Stack, Typography, Button, List, ListItem, ListItemText, IconButton, Tooltip,} from "@mui/material";
+import { Box, Container, Paper, Stack, Typography, Button, List, ListItem, ListItemText, IconButton, Tooltip } from "@mui/material";
 import { useEffect } from "react";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useNavigate } from "react-router-dom";
@@ -21,7 +21,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     fetchProfile();
-  }, [fetchProfile]);
+  }, []);
 
   const fullName =
     initialUser?.name ||
@@ -87,7 +87,7 @@ export default function ProfilePage() {
             role={initialUser?.role || "student"}
             email={initialUser?.email}
             bio={initialUser?.bio || "Bio"}
-            avatarUrl={initialUser?.profileImage} 
+            avatarUrl={initialUser?.profileImage}
           />
 
           {/* RIGHT: two columns */}
@@ -109,9 +109,7 @@ export default function ProfilePage() {
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {initialUser?.birthday
-                    ? new Date(initialUser.birthday)
-                        .toISOString()
-                        .slice(0, 10)
+                    ? new Date(initialUser.birthday).toISOString().slice(0, 10)
                     : "No especificada"}
                 </Typography>
 

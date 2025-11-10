@@ -1,19 +1,5 @@
-// src/features/courses/components/CourseCreateDialog.jsx
 import { useMemo, useState } from "react";
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  IconButton,
-  TextField,
-  Button,
-  Grid,
-  MenuItem,
-  Typography,
-  Box,
-  Stack,
-} from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, DialogActions, IconButton, TextField, Button, Grid, MenuItem, Typography, Box, Stack,} from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
 export default function CourseCreateDialog({
@@ -116,13 +102,7 @@ export default function CourseCreateDialog({
         },
       }}
     >
-      <DialogTitle
-        sx={{
-          fontWeight: 800,
-          pr: 6,
-          py: 2,
-        }}
-      >
+      <DialogTitle sx={{ fontWeight: 800, pr: 6, py: 2 }}>
         Crear Nuevo Curso
         <IconButton
           aria-label="close"
@@ -137,12 +117,10 @@ export default function CourseCreateDialog({
         dividers
         sx={{
           borderColor: "#eef0f3",
-          // Ritmo y consistencia visual como en el mock:
           pt: 2.5,
           pb: 1.5,
         }}
       >
-        {/* Normaliza los number inputs para que no “crezcan” por los spinners */}
         <Box
           sx={{
             "& input[type=number]": { MozAppearance: "textfield" },
@@ -185,7 +163,7 @@ export default function CourseCreateDialog({
               />
             </Grid>
 
-            {/* Fila 2: Docente / Estado */}
+            {/* Docente con label shrink + placeholder visible */}
             <Grid item xs={12} md={6}>
               <TextField
                 size="small"
@@ -197,7 +175,26 @@ export default function CourseCreateDialog({
                 fullWidth
                 error={Boolean(errors.docenteId)}
                 helperText={errors.docenteId || " "}
+                InputLabelProps={{ shrink: true }}  
+                SelectProps={{
+                  displayEmpty: true,
+                  renderValue: (value) =>
+                    value === "" ? (
+                      <span style={{ opacity: 0.6 }}>Seleccionar docente</span>
+                    ) : (
+                      teachers.find((t) => t.id === value)?.name
+                    ),
+                }}
+                sx={{
+                  "& .MuiSelect-select": {
+                    paddingY: "9px !important", 
+                  },
+                }}
               >
+                <MenuItem value="" disabled>
+                  Seleccionar docente
+                </MenuItem>
+
                 {teachers.length === 0 ? (
                   <MenuItem value="" disabled>
                     No hay docentes
@@ -229,7 +226,7 @@ export default function CourseCreateDialog({
               </TextField>
             </Grid>
 
-            {/* Fila 3: Duración / Cupo */}
+            {/* Duración / Cupo */}
             <Grid item xs={12} md={6}>
               <TextField
                 size="small"

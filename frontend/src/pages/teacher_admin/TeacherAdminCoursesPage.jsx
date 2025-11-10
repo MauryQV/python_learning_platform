@@ -1,19 +1,12 @@
 import React, { useState } from "react";
-import {
-  Box,
-  Button,
-  CssBaseline,
-  Divider,
-  List,
-  ListItemButton,
-  ListItemText,
-  Typography,
-} from "@mui/material";
+import { Box, Button, CssBaseline, Divider, List, ListItemButton, ListItemText, Typography,} from "@mui/material";
 import { styled } from "@mui/material/styles";
 import CoursesGrid from "./ui/CoursesGrid";
-import CourseFilters from "./ui/CourseFilters";
 import SearchBar from "./ui/SearchBar";
-import CourseCreateDialog from "./ui/CourseCreateDialog"; 
+import CourseCreateDialog from "./ui/CourseCreateDialog";
+import { useAuth } from "@/context/AuthContext";
+
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Sidebar = styled(Box)(({ theme }) => ({
   width: 256,
@@ -29,11 +22,32 @@ const Sidebar = styled(Box)(({ theme }) => ({
 }));
 
 export default function TeacherAdminCoursesPage() {
+  const location = useLocation();   
+  const navigate = useNavigate();
+
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [openCreate, setOpenCreate] = useState(false); 
+  const [openCreate, setOpenCreate] = useState(false);
 
-  // mock teachers; replace with API later
+  const { user } = useAuth();
+
+  const displayName =
+    (user?.name && user.name.trim()) ||
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() ||
+    (user?.email ? user.email.split("@")[0] : "") ||
+    "Usuario";
+
+  const initials = displayName
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  const roleLabel =
+    user?.role === "admin_teacher" ? "Admin Profesor" : user?.role || "";
+
   const teachers = [
     { id: 1, name: "Prof. María García" },
     { id: 2, name: "Prof. Juan Pérez" },
@@ -41,10 +55,17 @@ export default function TeacherAdminCoursesPage() {
   ];
 
   const handleCreate = async (payload) => {
-    // TODO: call your API (POST /cursos)
-    // await api.courses.create(payload)
     console.log("Creating course:", payload);
   };
+
+  const handleLogout = () => {
+    try {
+      localStorage.removeItem("authToken");
+    } catch {}
+    window.location.href = "/login";
+  };
+
+  const isActive = (pattern) => location.pathname.includes(pattern);
 
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", bgcolor: "#f7f8fa" }}>
@@ -57,20 +78,75 @@ export default function TeacherAdminCoursesPage() {
         </Typography>
 
         <List sx={{ mt: 1 }}>
-          <ListItemButton selected sx={{ borderRadius: 1 }}>
+          
+          {/* ✅ CURSOS */}
+          <ListItemButton
+            sx={{
+              borderRadius: 1,
+              bgcolor: isActive("courses") ? "#f6d458" : "transparent",
+              color: isActive("courses") ? "#000" : "#fff",
+              fontWeight: isActive("courses") ? 700 : 400,
+              "&:hover": { bgcolor: "#f6d458", color: "#000" },
+            }}
+            onClick={() => navigate("/teacher-admin/courses")}
+          >
             <ListItemText primary="Cursos" />
           </ListItemButton>
-          <ListItemButton sx={{ borderRadius: 1 }}>
+
+          {/* ✅ DOCENTES */}
+          <ListItemButton
+            sx={{
+              borderRadius: 1,
+              bgcolor: isActive("teachers") ? "#f6d458" : "transparent",
+              color: isActive("teachers") ? "#000" : "#fff",
+              fontWeight: isActive("teachers") ? 700 : 400,
+              "&:hover": { bgcolor: "#f6d458", color: "#000" },
+            }}
+            onClick={() => navigate("/teacher-admin/teachers")}
+          >
             <ListItemText primary="Docentes" />
           </ListItemButton>
-          <ListItemButton sx={{ borderRadius: 1 }}>
+
+          {/* ✅ ESTUDIANTES */}
+          <ListItemButton
+            sx={{
+              borderRadius: 1,
+              bgcolor: isActive("students") ? "#f6d458" : "transparent",
+              color: isActive("students") ? "#000" : "#fff",
+              fontWeight: isActive("students") ? 700 : 400,
+              "&:hover": { bgcolor: "#f6d458", color: "#000" },
+            }}
+            onClick={() => navigate("/teacher-admin/students")}
+          >
             <ListItemText primary="Estudiantes" />
           </ListItemButton>
         </List>
+
+        <Box sx={{ flexGrow: 1 }} />
+
+        <Button
+          onClick={handleLogout}
+          fullWidth
+          variant="outlined"
+          sx={{
+            mt: 1,
+            borderColor: "rgba(255,255,255,.6)",
+            color: "#fff",
+            textTransform: "none",
+            fontWeight: 700,
+            "&:hover": {
+              borderColor: "#fff",
+              background: "rgba(255,255,255,.08)",
+            },
+          }}
+        >
+          Cerrar sesión
+        </Button>
       </Sidebar>
 
       {/* Content */}
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+
         {/* Header */}
         <Box
           sx={{
@@ -90,7 +166,7 @@ export default function TeacherAdminCoursesPage() {
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
             <Button
               variant="contained"
-              onClick={() => setOpenCreate(true)} 
+              onClick={() => setOpenCreate(true)}
               sx={{
                 bgcolor: "#f6d458",
                 color: "#000",
@@ -102,6 +178,19 @@ export default function TeacherAdminCoursesPage() {
               + Crear Curso
             </Button>
 
+            <Button
+              onClick={handleLogout}
+              variant="text"
+              sx={{
+                display: { xs: "inline-flex", md: "none" },
+                textTransform: "none",
+                fontWeight: 700,
+              }}
+            >
+              Cerrar sesión
+            </Button>
+
+            {/* User Info */}
             <Box sx={{ display: { xs: "none", sm: "flex" }, alignItems: "center", gap: 1.2 }}>
               <Box
                 sx={{
@@ -114,21 +203,21 @@ export default function TeacherAdminCoursesPage() {
                   fontWeight: 800,
                 }}
               >
-                PA
+                {initials}
               </Box>
               <Box sx={{ lineHeight: 1 }}>
                 <Typography variant="body2" fontWeight={700}>
-                  Prof. Admin
+                  {displayName}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Administrador
+                  {roleLabel}
                 </Typography>
               </Box>
             </Box>
           </Box>
         </Box>
 
-        {/* Panel (search + filters) */}
+        {/* Search + Filters Container */}
         <Box sx={{ px: 3, py: 3 }}>
           <Box
             sx={{
@@ -153,7 +242,7 @@ export default function TeacherAdminCoursesPage() {
 
               <Button
                 variant="contained"
-                onClick={() => setOpenCreate(true)} 
+                onClick={() => setOpenCreate(true)}
                 sx={{
                   bgcolor: "#f6d458",
                   color: "#000",
@@ -169,7 +258,6 @@ export default function TeacherAdminCoursesPage() {
             <Divider sx={{ my: 2 }} />
           </Box>
 
-          {/* Grid */}
           <Box sx={{ mt: 3 }}>
             <CoursesGrid search={search} filter={filterStatus} />
           </Box>

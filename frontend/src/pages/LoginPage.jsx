@@ -11,22 +11,53 @@ export default function LoginPage() {
   } = useLoginModel();
 
   const { loginWithGoogle } = useAuth();
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+
+  const redirectByRole = (role) => {
+    const normalized = (role || "").toLowerCase();
+
+    switch (normalized) {
+      case "admin":
+        navigate("/admin", { replace: true });
+        break;
+
+      case "admin_teacher":
+        navigate("/teacher-admin/courses", { replace: true });
+        break;
+
+      case "teacher":
+        navigate("/dashboard", { replace: true });
+        break;
+
+      case "student":
+        navigate("/profile", { replace: true });
+        break;
+
+      default:
+        navigate("/profile", { replace: true });
+        break;
+    }
+  };
 
   const handleGoogleIdToken = async (idToken) => {
     if (!idToken) return;
+
     const res = await loginWithGoogle(idToken);
+
     if (res?.success || localStorage.getItem("token")) {
-      navigate("/profile");
+      const userRole = res?.user?.role || localStorage.getItem("role");
+      redirectByRole(userRole);
     }
   };
 
   const handleLoginAndRedirect = async (e) => {
     await handleLogin(e);
+
     if (isSuccess || localStorage.getItem("token")) {
-      navigate("/profile");
+      const userRole = localStorage.getItem("role");
+      redirectByRole(userRole);
     }
-  }; 
+  };
 
   return (
     <Container
@@ -51,9 +82,9 @@ export default function LoginPage() {
         onEmailChange={setEmail}
         onPasswordChange={setPassword}
         onTogglePw={() => setShowPw((s) => !s)}
-        onSubmit={handleLoginAndRedirect} 
+        onSubmit={handleLoginAndRedirect}
         onMicrosoft={microsoftLogin}
-        onGoogleIdToken={handleGoogleIdToken} 
+        onGoogleIdToken={handleGoogleIdToken}
       />
     </Container>
   );

@@ -1,14 +1,20 @@
-// src/app/providers/ProtectedRoute.jsx
 import { Navigate } from "react-router-dom";
 import { CircularProgress, Box } from "@mui/material";
 import { useAuth } from "@/context/AuthContext";
 
-export default function ProtectedRoute({ children, adminOnly = false }) {
+export default function ProtectedRoute({ children, adminOnly = false, roles = null }) {
   const { isAuthenticated, user, loading } = useAuth();
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh" }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+        }}
+      >
         <CircularProgress />
       </Box>
     );
@@ -18,9 +24,23 @@ export default function ProtectedRoute({ children, adminOnly = false }) {
 
   const role = String(user?.role || "").toLowerCase();
 
-  if (adminOnly && role == "student") return <Navigate to="/profile" replace />;
-  if (!adminOnly && role == "admin") return <Navigate to="/admin" replace />;
+  if (roles && !roles.includes(role)) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  if (adminOnly) {
+    if (role !== "admin") {
+      return <Navigate to="/profile" replace />;
+    }
+  }
+
+  if (!adminOnly && !roles && role === "admin") {
+    return <Navigate to="/admin" replace />;
+  }
+
+  if (!roles && role === "admin_teacher") {
+    return <Navigate to="/teacher-admin/courses" replace />;
+  }
 
   return children;
 }
-

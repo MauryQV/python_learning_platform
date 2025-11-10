@@ -1,4 +1,3 @@
-// src/main.jsx (o donde montes <App />)
 import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { ThemeProvider, CssBaseline } from "@mui/material";

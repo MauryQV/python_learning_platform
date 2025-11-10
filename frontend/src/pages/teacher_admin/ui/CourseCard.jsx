@@ -1,47 +1,88 @@
-import { Card, CardContent, Box, Typography, Chip, Stack, Button } from "@mui/material";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import PeopleIcon from "@mui/icons-material/People";
+import { Box, Typography, Button, Chip } from "@mui/material";
 
-export default function CourseCard({ course }) {
-  const active = course.status === "active";
-  const badge = active
-    ? { label: "Activo",  sx: { bgcolor: "#e8f8f0", color: "#0a7f53" } }
-    : { label: "Borrador", sx: { bgcolor: "#fff4e0", color: "#a36200" } };
-
+export default function CourseCard({ course, onEdit }) {
   return (
-    <Card elevation={0} sx={{ border: "1px solid #e6e8eb", borderRadius: 3, overflow: "hidden", boxShadow: "0 2px 8px rgba(16,24,40,.06)" }}>
-      {/* Banner */}
-      <Box sx={{ height: 130, position: "relative", background: course.gradient }}>
-        <Box sx={{ position: "absolute", right: 12, top: 6, fontSize: 44 }}>{course.emoji}</Box>
+    <Box
+      sx={{
+        borderRadius: 2,
+        overflow: "hidden",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+        bgcolor: "#fff",
+        display: "flex",
+        flexDirection: "column",
+        height: 330,
+        width: "100%",
+      }}
+    >
+      {/* Top area */}
+      <Box
+        sx={{
+          height: 120,
+          background: course.gradient,
+          p: 1.5,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+        }}
+      >
         <Chip
+          label={course.status === "active" ? "Activo" : "Borrador"}
           size="small"
-          label={badge.label}
-          sx={{ position: "absolute", left: 12, top: 10, px: 1.2, fontWeight: 600, ...badge.sx }}
+          sx={{
+            bgcolor: course.status === "active" ? "#D1FAE5" : "#FDE68A",
+            color: course.status === "active" ? "#065F46" : "#92400E",
+            fontWeight: 700,
+          }}
         />
+        <Typography fontSize={42}>{course.emoji}</Typography>
       </Box>
 
-      <CardContent sx={{ p: 2 }}>
-        <Typography variant="h6" fontWeight={800}>{course.title}</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>👤 {course.teacher}</Typography>
+      {/* Middle content */}
+      <Box sx={{ p: 2, flexGrow: 1 }}>
+        <Typography
+          sx={{
+            fontWeight: 800,
+            mb: 0.5,
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            height: 48,
+          }}
+        >
+          {course.title}
+        </Typography>
 
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 1.5 }} color="text.secondary">
-          <Stack direction="row" alignItems="center" spacing={0.8}>
-            <PeopleIcon fontSize="small" />
-            <Typography variant="body2">{course.students} estudiantes</Typography>
-          </Stack>
-          <Stack direction="row" alignItems="center" spacing={0.8}>
-            <AccessTimeIcon fontSize="small" />
-            <Typography variant="body2">{course.duration}</Typography>
-          </Stack>
-        </Stack>
+        <Typography variant="body2" color="text.secondary">
+          👤 {course.teacher}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          👥 {course.students} estudiantes&nbsp;&nbsp; ⏱ {course.duration}
+        </Typography>
+      </Box>
 
-        <Stack direction="row" spacing={1.2} sx={{ mt: 2 }}>
-          <Button variant="contained" sx={{ bgcolor: "#f6d458", color: "#000", fontWeight: 700, ":hover": { bgcolor: "#eac94f" } }}>
-            Editar
-          </Button>
-          <Button variant="outlined">Ver</Button>
-        </Stack>
-      </CardContent>
-    </Card>
+      {/* Footer */}
+      <Box
+        sx={{
+          p: 2,
+          display: "flex",
+          gap: 1,
+          height: 60,
+        }}
+      >
+        <Button
+          variant="contained"
+          size="small"
+          sx={{ bgcolor: "#f6d458", color: "#000", fontWeight: 700, ":hover": { bgcolor: "#eac94f" } }}
+          onClick={() => onEdit?.(course)}  // 👈 triggers edit flow
+        >
+          Editar
+        </Button>
+        <Button variant="outlined" size="small">
+          Ver
+        </Button>
+      </Box>
+    </Box>
   );
 }

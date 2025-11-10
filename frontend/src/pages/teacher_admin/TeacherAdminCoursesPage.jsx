@@ -4,8 +4,8 @@ import { styled } from "@mui/material/styles";
 import CoursesGrid from "./ui/CoursesGrid";
 import SearchBar from "./ui/SearchBar";
 import CourseCreateDialog from "./ui/CourseCreateDialog";
+import CourseEditDialog from "./ui/CourseEditDialog"; 
 import { useAuth } from "@/context/AuthContext";
-
 import { useLocation, useNavigate } from "react-router-dom";
 
 const Sidebar = styled(Box)(({ theme }) => ({
@@ -22,12 +22,17 @@ const Sidebar = styled(Box)(({ theme }) => ({
 }));
 
 export default function TeacherAdminCoursesPage() {
-  const location = useLocation();   
+  const location = useLocation();
   const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [openCreate, setOpenCreate] = useState(false);
+
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [openEdit, setOpenEdit] = useState(false);
+
+  const [courses, setCourses] = useState([]);
 
   const { user } = useAuth();
 
@@ -54,8 +59,53 @@ export default function TeacherAdminCoursesPage() {
     { id: 3, name: "Prof. Ana Martínez" },
   ];
 
+  const handleOpenEdit = (course) => {
+    setSelectedCourse(course);
+    setOpenEdit(true);
+  };
+
+  const handleSaveEdit = async (payload) => {
+    setCourses((prev) =>
+      prev.map((c) => {
+        if (c.id !== payload.id) return c;
+        return {
+          ...c,
+          title: payload.name,
+          description: payload.description,
+          teacherId: payload.teacherId,
+          teacher:
+            teachers.find((t) => t.id === payload.teacherId)?.name || c.teacher,
+          status: payload.status,
+          duration: `${payload.durationHours}h`,
+          capacity: payload.capacity,
+          emoji: payload.emoji ?? c.emoji,
+          gradient: payload.gradient ?? c.gradient,
+        };
+      })
+    );
+  };
+
+  const handleDeleteCourse = async (id) => {
+    setCourses((prev) => prev.filter((c) => c.id !== id));
+  };
+
   const handleCreate = async (payload) => {
-    console.log("Creating course:", payload);
+    const teacherName =
+      teachers.find((t) => String(t.id) === String(payload.teacherId))?.name ||
+      "Profesor";
+
+    const newCourse = {
+      id: Date.now(),
+      title: payload.name,
+      teacher: teacherName,
+      students: 0,
+      duration: `${payload.durationHours}h`,
+      status: payload.status, // "active" | "draft"
+      emoji: "📘",
+      gradient: "linear-gradient(90deg,#a5d8ff,#c3f0ff)",
+    };
+
+    setCourses((prev) => [newCourse, ...prev]);
   };
 
   const handleLogout = () => {
@@ -78,8 +128,7 @@ export default function TeacherAdminCoursesPage() {
         </Typography>
 
         <List sx={{ mt: 1 }}>
-          
-          {/* ✅ CURSOS */}
+          {/* CURSOS */}
           <ListItemButton
             sx={{
               borderRadius: 1,
@@ -93,7 +142,7 @@ export default function TeacherAdminCoursesPage() {
             <ListItemText primary="Cursos" />
           </ListItemButton>
 
-          {/* ✅ DOCENTES */}
+          {/* DOCENTES */}
           <ListItemButton
             sx={{
               borderRadius: 1,
@@ -107,7 +156,7 @@ export default function TeacherAdminCoursesPage() {
             <ListItemText primary="Docentes" />
           </ListItemButton>
 
-          {/* ✅ ESTUDIANTES */}
+          {/* ESTUDIANTES */}
           <ListItemButton
             sx={{
               borderRadius: 1,
@@ -130,7 +179,7 @@ export default function TeacherAdminCoursesPage() {
           variant="outlined"
           sx={{
             mt: 1,
-            borderColor: "rgba(255,255,255,.6)",
+            borderColor: "rgba(255, 234, 74, 0.97)",
             color: "#fff",
             textTransform: "none",
             fontWeight: 700,
@@ -146,7 +195,6 @@ export default function TeacherAdminCoursesPage() {
 
       {/* Content */}
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
-
         {/* Header */}
         <Box
           sx={{
@@ -159,7 +207,11 @@ export default function TeacherAdminCoursesPage() {
             justifyContent: "space-between",
           }}
         >
-          <Typography variant="h4" fontWeight={800} sx={{ fontSize: { xs: 22, md: 28 } }}>
+          <Typography
+            variant="h4"
+            fontWeight={800}
+            sx={{ fontSize: { xs: 22, md: 28 } }}
+          >
             Panel de Administración
           </Typography>
 
@@ -178,6 +230,7 @@ export default function TeacherAdminCoursesPage() {
               + Crear Curso
             </Button>
 
+            {/* Logout header (mobile) */}
             <Button
               onClick={handleLogout}
               variant="text"
@@ -190,8 +243,14 @@ export default function TeacherAdminCoursesPage() {
               Cerrar sesión
             </Button>
 
-            {/* User Info */}
-            <Box sx={{ display: { xs: "none", sm: "flex" }, alignItems: "center", gap: 1.2 }}>
+            {/* User block */}
+            <Box
+              sx={{
+                display: { xs: "none", sm: "flex" },
+                alignItems: "center",
+                gap: 1.2,
+              }}
+            >
               <Box
                 sx={{
                   width: 40,
@@ -217,7 +276,7 @@ export default function TeacherAdminCoursesPage() {
           </Box>
         </Box>
 
-        {/* Search + Filters Container */}
+        {/* Search + Grid */}
         <Box sx={{ px: 3, py: 3 }}>
           <Box
             sx={{
@@ -237,7 +296,8 @@ export default function TeacherAdminCoursesPage() {
               }}
             >
               <Box sx={{ flex: 1 }}>
-                <SearchBar search={search} setSearch={setSearch} />
+                {/* 🔁 SearchBar now uses { value, onChange } */}
+                <SearchBar value={search} onChange={setSearch} />
               </Box>
 
               <Button
@@ -259,17 +319,33 @@ export default function TeacherAdminCoursesPage() {
           </Box>
 
           <Box sx={{ mt: 3 }}>
-            <CoursesGrid search={search} filter={filterStatus} />
+            {/* Grid renders empty state when there are no courses */}
+            <CoursesGrid
+              courses={courses}
+              search={search}
+              filter={filterStatus}
+              onEdit={handleOpenEdit}
+            />
           </Box>
         </Box>
       </Box>
 
-      {/* Dialog mount */}
+      {/* Create Dialog mount */}
       <CourseCreateDialog
         open={openCreate}
         onClose={() => setOpenCreate(false)}
         onCreate={handleCreate}
         teachers={teachers}
+      />
+
+      {/* Edit Dialog mount */}
+      <CourseEditDialog
+        open={openEdit}
+        onClose={() => setOpenEdit(false)}
+        course={selectedCourse}
+        teachers={teachers}
+        onSave={handleSaveEdit}
+        onDelete={handleDeleteCourse}
       />
     </Box>
   );

@@ -12,9 +12,29 @@ export default function SearchBar({ value, onChange }) {
       InputProps={{
         startAdornment: (
           <InputAdornment position="start">
-            <SearchIcon color="action" />
+            <SearchIcon sx={{ color: "#6b7280" }} />
           </InputAdornment>
         ),
+        sx: {
+          borderRadius: 2,
+          bgcolor: "#ffffff",
+          "& input": {
+            paddingY: 1.4, 
+          },
+        },
+      }}
+      sx={{
+        "& .MuiOutlinedInput-root": {
+          "& fieldset": {
+            borderColor: "#d1d5db",
+          },
+          "&:hover fieldset": {
+            borderColor: "#9ca3af",
+          },
+          "&.Mui-focused fieldset": {
+            borderColor: "#f6d458",
+          },
+        },
       }}
     />
   );

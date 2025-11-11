@@ -1,12 +1,19 @@
-import React, { useState } from "react";
-import { Box, Button, CssBaseline, Divider, List, ListItemButton, ListItemText, Typography,} from "@mui/material";
+// frontend/src/pages/teacher_admin/TeacherAdminCoursesPage.jsx
+import React, { useEffect, useState } from "react";
+import {
+  Box, Button, CssBaseline, Divider, List, ListItemButton, ListItemText, Typography,
+} from "@mui/material";
 import { styled } from "@mui/material/styles";
-import CoursesGrid from "./ui/CoursesGrid";
-import SearchBar from "./ui/SearchBar";
-import CourseCreateDialog from "./ui/CourseCreateDialog";
-import CourseEditDialog from "./ui/CourseEditDialog"; 
-import { useAuth } from "@/context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useSnackbar } from "notistack";
+
+import CoursesGrid from "../../features/teacher_admin/ui/CoursesGrid";
+import SearchBar from "../../features/teacher_admin/ui/SearchBar";
+import CourseCreateDialog from "../../features/teacher_admin/ui/CourseCreateDialog";
+import CourseEditDialog from "../../features/teacher_admin/ui/CourseEditDialog";
+
+import { useAuth } from "@/context/AuthContext";
+import { teacherAdminApi } from "@/features/teacher_admin/api/teacherAdminApi";
 
 const Sidebar = styled(Box)(({ theme }) => ({
   width: 256,
@@ -24,99 +31,151 @@ const Sidebar = styled(Box)(({ theme }) => ({
 export default function TeacherAdminCoursesPage() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
 
+  // UI local
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [openCreate, setOpenCreate] = useState(false);
-
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [openEdit, setOpenEdit] = useState(false);
 
+  // Datos
   const [courses, setCourses] = useState([]);
+  const [teachers, setTeachers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const { user } = useAuth();
-
   const displayName =
     (user?.name && user.name.trim()) ||
     [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim() ||
     (user?.email ? user.email.split("@")[0] : "") ||
     "Usuario";
+  const initials = displayName.split(" ").filter(Boolean).map(w => w[0]).join("").slice(0,2).toUpperCase();
+  const roleLabel = user?.role === "admin_teacher" ? "Admin Profesor" : (user?.role || "");
 
-  const initials = displayName
-    .split(" ")
-    .filter(Boolean)
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  // ====== helpers ======
+  const refreshData = async () => {
+    const [c, t] = await Promise.all([
+      teacherAdminApi.listCourses(),   // devuelve { items, error }
+      teacherAdminApi.listTeachers(),  // devuelve { items, error }
+    ]);
 
-  const roleLabel =
-    user?.role === "admin_teacher" ? "Admin Profesor" : user?.role || "";
+    if (c.error) enqueueSnackbar(`No se pudo cargar cursos: ${c.error}`, { variant: "error" });
+    if (t.error) enqueueSnackbar(`No se pudo cargar docentes: ${t.error}`, { variant: "warning" });
 
-  const teachers = [
-    { id: 1, name: "Prof. María García" },
-    { id: 2, name: "Prof. Juan Pérez" },
-    { id: 3, name: "Prof. Ana Martínez" },
-  ];
+    setCourses(c.items || []);
+    setTeachers(t.items || []);
+  };
 
+  // ====== Carga inicial ======
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setLoading(true);
+      await refreshData();
+      if (mounted) setLoading(false);
+    })();
+    return () => { mounted = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ====== Handlers ======
   const handleOpenEdit = (course) => {
     setSelectedCourse(course);
     setOpenEdit(true);
   };
 
+  // (demo visual) edición local
   const handleSaveEdit = async (payload) => {
-    setCourses((prev) =>
-      prev.map((c) => {
-        if (c.id !== payload.id) return c;
-        return {
-          ...c,
-          title: payload.name,
-          description: payload.description,
-          teacherId: payload.teacherId,
-          teacher:
-            teachers.find((t) => t.id === payload.teacherId)?.name || c.teacher,
-          status: payload.status,
-          duration: `${payload.durationHours}h`,
-          capacity: payload.capacity,
-          emoji: payload.emoji ?? c.emoji,
-          gradient: payload.gradient ?? c.gradient,
-        };
-      })
+    setCourses(prev =>
+      prev.map(c =>
+        c.id === payload.id
+          ? {
+              ...c,
+              title: payload.name,
+              description: payload.description,
+              teacher:
+                teachers.find((t) => String(t.id) === String(payload.teacherId))?.name ||
+                c.teacher,
+              status: payload.status,
+              duration: payload.durationHours ? `${payload.durationHours}h` : c.duration,
+            }
+          : c
+      )
     );
+    setOpenEdit(false);
+    setSelectedCourse(null);
+    enqueueSnackbar("Curso actualizado en la vista", { variant: "success" });
   };
 
   const handleDeleteCourse = async (id) => {
-    setCourses((prev) => prev.filter((c) => c.id !== id));
+    // (opcional) aquí podrías llamar a DELETE si tu backend lo expone
+    setCourses(prev => prev.filter(c => c.id !== id));
+    enqueueSnackbar("Curso eliminado en la vista", { variant: "info" });
   };
 
-  const handleCreate = async (payload) => {
-    const teacherName =
-      teachers.find((t) => String(t.id) === String(payload.teacherId))?.name ||
-      "Profesor";
+  /**
+   * Crear curso con backend:
+   * - Recibe desde el Dialog un payload YA listo para el backend:
+   *   { name, description, startDate, endDate, code, (opcional) teacherId }
+   * - Crea el curso
+   * - Si vino teacherId, intenta asignarlo
+   * - Refresca la lista para ver el code y demás datos reales
+   */
+  const handleCreate = async (payloadFromDialog) => {
+    try {
+      // 1) crear curso (server requiere exactamente name, description, startDate, endDate, code)
+      const created = await teacherAdminApi.createCourse({
+        name: payloadFromDialog.name,
+        description: payloadFromDialog.description,
+        startDate: payloadFromDialog.startDate,
+        endDate: payloadFromDialog.endDate,
+        code: payloadFromDialog.code,
+      });
 
-    const newCourse = {
-      id: Date.now(),
-      title: payload.name,
-      teacher: teacherName,
-      students: 0,
-      duration: `${payload.durationHours}h`,
-      status: payload.status, // "active" | "draft"
-      emoji: "📘",
-      gradient: "linear-gradient(90deg,#a5d8ff,#c3f0ff)",
-    };
+      // Intentamos obtener ID robustamente (según cómo normalices en teacherAdminApi)
+      const createdId =
+        created?.id ??
+        created?.courseId ??
+        created?._raw?.course?.courseId ??
+        created?._raw?.id;
 
-    setCourses((prev) => [newCourse, ...prev]);
+      // 2) asignar docente si viene del modal (opcional)
+      const teacherId =
+        payloadFromDialog.teacherId ??
+        payloadFromDialog.docenteId ??
+        null;
+
+      if (createdId && teacherId) {
+        try {
+          await teacherAdminApi.assignTeacherToCourse(createdId, teacherId);
+        } catch (e) {
+          console.warn("No se pudo asignar docente:", e);
+          enqueueSnackbar("Curso creado, pero no se pudo asignar el docente", { variant: "warning" });
+        }
+      }
+
+      // 3) refrescar listado desde backend para ver datos reales (incluye code)
+      await refreshData();
+
+      // 4) cerrar modal + toast
+      setOpenCreate(false);
+      const titleShown = created?.title || created?.name || "Curso";
+      enqueueSnackbar(`"${titleShown}" creado`, { variant: "success" });
+    } catch (e) {
+      const msg = e?.response?.data?.message || e?.message || "Error";
+      enqueueSnackbar(`No se pudo crear: ${msg}`, { variant: "error" });
+    }
   };
 
   const handleLogout = () => {
-    try {
-      localStorage.removeItem("authToken");
-    } catch {}
+    try { localStorage.removeItem("authToken"); } catch {}
     window.location.href = "/login";
   };
-
   const isActive = (pattern) => location.pathname.includes(pattern);
 
+  // ====== Render ======
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", bgcolor: "#f7f8fa" }}>
       <CssBaseline />
@@ -128,7 +187,6 @@ export default function TeacherAdminCoursesPage() {
         </Typography>
 
         <List sx={{ mt: 1 }}>
-          {/* CURSOS */}
           <ListItemButton
             sx={{
               borderRadius: 1,
@@ -141,8 +199,6 @@ export default function TeacherAdminCoursesPage() {
           >
             <ListItemText primary="Cursos" />
           </ListItemButton>
-
-          {/* DOCENTES */}
           <ListItemButton
             sx={{
               borderRadius: 1,
@@ -155,8 +211,6 @@ export default function TeacherAdminCoursesPage() {
           >
             <ListItemText primary="Docentes" />
           </ListItemButton>
-
-          {/* ESTUDIANTES */}
           <ListItemButton
             sx={{
               borderRadius: 1,
@@ -198,8 +252,7 @@ export default function TeacherAdminCoursesPage() {
         {/* Header */}
         <Box
           sx={{
-            px: 3,
-            py: 2.5,
+            px: 3, py: 2.5,
             bgcolor: "#fff",
             borderBottom: "1px solid #e6e8eb",
             display: "flex",
@@ -207,11 +260,7 @@ export default function TeacherAdminCoursesPage() {
             justifyContent: "space-between",
           }}
         >
-          <Typography
-            variant="h4"
-            fontWeight={800}
-            sx={{ fontSize: { xs: 22, md: 28 } }}
-          >
+          <Typography variant="h4" fontWeight={800} sx={{ fontSize: { xs: 22, md: 28 } }}>
             Panel de Administración
           </Typography>
 
@@ -230,7 +279,6 @@ export default function TeacherAdminCoursesPage() {
               + Crear Curso
             </Button>
 
-            {/* Logout header (mobile) */}
             <Button
               onClick={handleLogout}
               variant="text"
@@ -243,34 +291,18 @@ export default function TeacherAdminCoursesPage() {
               Cerrar sesión
             </Button>
 
-            {/* User block */}
-            <Box
-              sx={{
-                display: { xs: "none", sm: "flex" },
-                alignItems: "center",
-                gap: 1.2,
-              }}
-            >
+            <Box sx={{ display: { xs: "none", sm: "flex" }, alignItems: "center", gap: 1.2 }}>
               <Box
                 sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  bgcolor: "#e5e7eb",
-                  display: "grid",
-                  placeItems: "center",
-                  fontWeight: 800,
+                  width: 40, height: 40, borderRadius: "50%",
+                  bgcolor: "#e5e7eb", display: "grid", placeItems: "center", fontWeight: 800,
                 }}
               >
                 {initials}
               </Box>
               <Box sx={{ lineHeight: 1 }}>
-                <Typography variant="body2" fontWeight={700}>
-                  {displayName}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {roleLabel}
-                </Typography>
+                <Typography variant="body2" fontWeight={700}>{displayName}</Typography>
+                <Typography variant="caption" color="text.secondary">{roleLabel}</Typography>
               </Box>
             </Box>
           </Box>
@@ -287,16 +319,8 @@ export default function TeacherAdminCoursesPage() {
               p: { xs: 2, md: 2.5 },
             }}
           >
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: { xs: "column", md: "row" },
-                gap: 1.5,
-                alignItems: { md: "center" },
-              }}
-            >
+            <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 1.5, alignItems: { md: "center" } }}>
               <Box sx={{ flex: 1 }}>
-                {/* 🔁 SearchBar now uses { value, onChange } */}
                 <SearchBar value={search} onChange={setSearch} />
               </Box>
 
@@ -319,8 +343,8 @@ export default function TeacherAdminCoursesPage() {
           </Box>
 
           <Box sx={{ mt: 3 }}>
-            {/* Grid renders empty state when there are no courses */}
             <CoursesGrid
+              loading={loading}
               courses={courses}
               search={search}
               filter={filterStatus}
@@ -330,7 +354,7 @@ export default function TeacherAdminCoursesPage() {
         </Box>
       </Box>
 
-      {/* Create Dialog mount */}
+      {/* Create Dialog */}
       <CourseCreateDialog
         open={openCreate}
         onClose={() => setOpenCreate(false)}
@@ -338,7 +362,7 @@ export default function TeacherAdminCoursesPage() {
         teachers={teachers}
       />
 
-      {/* Edit Dialog mount */}
+      {/* Edit Dialog */}
       <CourseEditDialog
         open={openEdit}
         onClose={() => setOpenEdit(false)}

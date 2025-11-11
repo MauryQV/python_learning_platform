@@ -54,6 +54,11 @@ export default function CourseCard({ course, onEdit }) {
           {course.title}
         </Typography>
 
+        {/* 🔑 Código del curso */}
+        <Typography variant="caption" sx={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace", display: "block", mb: 0.5 }}>
+          Código: <strong>{course.code || "(sin código)"}</strong>
+        </Typography>
+
         <Typography variant="body2" color="text.secondary">
           👤 {course.teacher}
         </Typography>
@@ -63,25 +68,16 @@ export default function CourseCard({ course, onEdit }) {
       </Box>
 
       {/* Footer */}
-      <Box
-        sx={{
-          p: 2,
-          display: "flex",
-          gap: 1,
-          height: 60,
-        }}
-      >
+      <Box sx={{ p: 2, display: "flex", gap: 1, height: 60 }}>
         <Button
           variant="contained"
           size="small"
           sx={{ bgcolor: "#f6d458", color: "#000", fontWeight: 700, ":hover": { bgcolor: "#eac94f" } }}
-          onClick={() => onEdit?.(course)}  // 👈 triggers edit flow
+          onClick={() => onEdit?.(course)}
         >
           Editar
         </Button>
-        <Button variant="outlined" size="small">
-          Ver
-        </Button>
+        <Button variant="outlined" size="small">Ver</Button>
       </Box>
     </Box>
   );

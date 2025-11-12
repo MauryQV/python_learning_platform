@@ -1,7 +1,12 @@
 import express from "express";
 import { verifyToken } from "../middleware/auth.middleware.js";
 import { avatarUpload } from "../middleware/upload.middleware.js";
-import { getMe, updateMe, uploadAvatar, deleteAvatar,} from "../controllers/profile.controller.js";
+import {
+  getMe,
+  updateMe,
+  uploadAvatar,
+  deleteAvatar,
+} from "../controllers/profile.controller.js";
 
 const router = express.Router();
 

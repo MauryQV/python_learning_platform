@@ -1,19 +1,24 @@
 import path from "path";
 import fs from "fs/promises";
 import prisma from "../../config/prismaClient.js";
-import { v2 as cloudinary } from "cloudinary"; 
+import { v2 as cloudinary } from "cloudinary";
 
 import {
   findProfileById,
   updateProfile as updateProfileRepo,
 } from "../repositories/user.repository.js";
+import { error } from "console";
 
 const toDateOrNull = (v) => (v ? new Date(`${v}T00:00:00.000Z`) : null);
 const clip = (s, n) => (typeof s === "string" ? s.slice(0, n) : s);
 
-
 function getAuthUserId(req) {
-  const candidates = [req.user?.userId, req.userId, req.user?.id, req.user?.sub];
+  const candidates = [
+    req.user?.userId,
+    req.userId,
+    req.user?.id,
+    req.user?.sub,
+  ];
   for (const c of candidates) {
     const n = Number(c);
     if (!Number.isNaN(n) && Number.isInteger(n)) return n;
@@ -24,10 +29,10 @@ function getAuthUserId(req) {
 function extractPublicIdFromUrl(url = "") {
   try {
     const u = new URL(url);
-    const parts = decodeURIComponent(u.pathname).split("/"); 
+    const parts = decodeURIComponent(u.pathname).split("/");
     const uploadIdx = parts.findIndex((p) => p === "upload");
     if (uploadIdx === -1) return null;
-    const afterUpload = parts.slice(uploadIdx + 1); 
+    const afterUpload = parts.slice(uploadIdx + 1);
     const withoutVersion =
       afterUpload[0] && /^v\d+$/i.test(afterUpload[0])
         ? afterUpload.slice(1)
@@ -40,7 +45,7 @@ function extractPublicIdFromUrl(url = "") {
       withoutVersion.length > 1
         ? [...withoutVersion.slice(0, -1), noExt].join("/")
         : noExt;
-    return pathPart || null; 
+    return pathPart || null;
   } catch {
     return null;
   }
@@ -99,7 +104,7 @@ export async function updateMe(req, res, next) {
   }
 }
 
-export const uploadAvatar = async (req, res) => {
+export const uploadAvatar = async (req, res, next) => {
   try {
     if (!req.file) return res.status(400).json({ message: "No file uploaded" });
 
@@ -107,8 +112,8 @@ export const uploadAvatar = async (req, res) => {
     if (!userId)
       return res.status(401).json({ message: "No authenticated user id" });
 
-    const secureUrl = req.file.path;    
-    const publicId  = req.file.filename;  
+    const secureUrl = req.file.path;
+    const publicId = req.file.filename;
 
     if (!secureUrl)
       return res.status(400).json({ message: "Upload failed (no URL)" });
@@ -117,10 +122,13 @@ export const uploadAvatar = async (req, res) => {
     try {
       const current = await prisma.user.findUnique({
         where: { userId },
-        select: { profileImage: true, avatarPublicId: true }, 
+        select: { profileImage: true, avatarPublicId: true },
       });
-      oldPublicId = current?.avatarPublicId || extractPublicIdFromUrl(current?.profileImage);
+      oldPublicId =
+        current?.avatarPublicId ||
+        extractPublicIdFromUrl(current?.profileImage);
     } catch {
+      next(error);
     }
 
     if (oldPublicId && oldPublicId !== publicId) {
@@ -162,7 +170,7 @@ export const deleteAvatar = async (req, res, next) => {
     // Pull current values
     const user = await prisma.user.findUnique({
       where: { userId },
-      select: { profileImage: true, avatarPublicId: true }, 
+      select: { profileImage: true, avatarPublicId: true },
     });
 
     if (!user)

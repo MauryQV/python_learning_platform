@@ -90,7 +90,9 @@ describe("Teacher Permission Service", () => {
     it("debería revocar permisos correctamente", async () => {
       hasRole.mockResolvedValue(true);
       removePermission.mockResolvedValue(true);
-      getUserPermissions.mockResolvedValue([{ permission: "teacher_executor" }]);
+      getUserPermissions.mockResolvedValue([
+        { permission: "teacher_executor" },
+      ]);
 
       const result = await revokeTeacherPermissions(1, ["teacher_editor"]);
 

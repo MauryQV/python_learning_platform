@@ -45,13 +45,23 @@ export const profileApi = {
   },
 
   async uploadAvatar(file) {
+    if (!file) throw new Error("No file provided for upload");
+
     const form = new FormData();
     form.append("avatar", file);
+
     const res = await api.post("/profile/avatar", form, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-    const url = resolveUrl(res.data?.url || "");
-    return { url };
+
+    const { ok, url, publicId, user } = res.data || {};
+
+    return {
+      ok: !!ok,
+      url: resolveUrl(url || user?.profileImage || user?.avatarUrl || ""),
+      publicId: publicId || user?.avatarPublicId || null,
+      user: user ? normalizeUser(user) : null,
+    };
   },
 
   async deleteAvatar() {

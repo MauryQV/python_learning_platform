@@ -39,6 +39,7 @@ export default function EditProfile() {
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState("");
   const [menuAnchor, setMenuAnchor] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -78,10 +79,13 @@ export default function EditProfile() {
     let profileImage = initialUser?.profileImage || "";
     try {
       if (avatarFile) {
+        setUploading(true);
         const up = await profileApi.uploadAvatar(avatarFile);
         profileImage = up?.url || profileImage;
+        setUploading(false);
       }
 
+      // 2️⃣ Update other fields
       const payload = {
         name: (form.name || fallbackFullName).trim(),
         birthday: form.birthday || "",
@@ -95,7 +99,9 @@ export default function EditProfile() {
       await fetchProfile();
       navigate("/profile");
     } catch (err) {
+      setUploading(false);
       console.error("❌ Failed to update profile:", err);
+      alert("No se pudo guardar los cambios.");
     }
   };
 
@@ -108,9 +114,7 @@ export default function EditProfile() {
   const handleMenuClose = () => setMenuAnchor(null);
   const hasPhoto = Boolean(avatarPreview || initialUser?.profileImage);
 
-  const triggerUpload = () => {
-    fileInputRef.current?.click();
-  };
+  const triggerUpload = () => fileInputRef.current?.click();
 
   const handleDeleteAvatar = async () => {
     try {
@@ -120,7 +124,7 @@ export default function EditProfile() {
       await profileApi.update({ profileImage: "" });
       await fetchProfile();
     } catch (err) {
-      console.error("❌ Failed to delete avatar:", err);
+      console.error("❌ Error al eliminar la foto:", err);
     } finally {
       handleMenuClose();
     }
@@ -164,6 +168,7 @@ export default function EditProfile() {
         </Container>
       </Box>
 
+      {/* MAIN CONTENT */}
       <Container maxWidth="lg">
         <Box
           sx={{
@@ -173,7 +178,7 @@ export default function EditProfile() {
             alignItems: "start",
           }}
         >
-          {/* LEFT: Profile Card with camera icon */}
+          {/* LEFT: Avatar + Card */}
           <Box sx={{ position: "relative" }}>
             <ProfileCard
               name={form.name || fallbackFullName || "Tu nombre"}
@@ -183,7 +188,7 @@ export default function EditProfile() {
               avatarUrl={avatarPreview || initialUser?.profileImage}
             />
 
-            {/* Hidden input for upload */}
+            {/* hidden input for file */}
             <input
               ref={fileInputRef}
               hidden
@@ -195,7 +200,7 @@ export default function EditProfile() {
               }}
             />
 
-            {/* 📸 Icon + Menu */}
+            {/* 📸 icon and menu */}
             <IconButton
               aria-label="Opciones de foto"
               onClick={handleMenuOpen}
@@ -222,13 +227,11 @@ export default function EditProfile() {
               anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
               transformOrigin={{ vertical: "top", horizontal: "right" }}
             >
-              {/* Always allow upload */}
               <MenuItem onClick={triggerUpload}>
                 <UploadIcon sx={{ mr: 1 }} />
                 Subir foto
               </MenuItem>
 
-              {/* Delete only if there is a photo */}
               {hasPhoto && (
                 <MenuItem onClick={handleDeleteAvatar}>
                   <DeleteIcon sx={{ mr: 1 }} />
@@ -298,6 +301,7 @@ export default function EditProfile() {
                   <Button
                     type="submit"
                     variant="contained"
+                    disabled={uploading}
                     sx={{
                       bgcolor: COLORS.BLUE,
                       color: "#fff",
@@ -305,7 +309,7 @@ export default function EditProfile() {
                       "&:hover": { bgcolor: "#15a822ff" },
                     }}
                   >
-                    GUARDAR CAMBIOS
+                    {uploading ? "SUBIENDO..." : "GUARDAR CAMBIOS"}
                   </Button>
                   <Button
                     variant="outlined"

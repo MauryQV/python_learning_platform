@@ -27,6 +27,8 @@ model User {
   verificationTokens EmailVerificationToken[]
   googleId           String?                  @unique
   profileImage       String?
+  avatarUrl       String?  @db.Text
+  avatarPublicId  String?  @db.VarChar(255)
   birthday           DateTime?
   gender             String?
   profession         String?

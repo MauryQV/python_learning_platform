@@ -115,7 +115,7 @@ export default function App() {
                   }
                 />
 
-                {/* ✅ NUEVA RUTA: Docentes */}
+                {/* RUTA: Docentes */}
                 <Route
                   path="/teacher-admin/teachers"
                   element={

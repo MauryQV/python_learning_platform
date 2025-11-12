@@ -40,9 +40,9 @@ export default function AssignmentDialog({
           label="Docente"
           value={teacherId}
           onChange={(e) => setTeacherId(e.target.value)}
-          // 👇 hace que la etiqueta no se superponga
+          
           InputLabelProps={{ shrink: true }}
-          // 👇 muestra placeholder bonito cuando value === ""
+          
           SelectProps={{
             displayEmpty: true,
             renderValue: (value) =>

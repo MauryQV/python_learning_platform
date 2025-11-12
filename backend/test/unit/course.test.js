@@ -144,7 +144,9 @@ describe("Course Service", () => {
 
     it("debería lanzar error si removeTeacherFromCourse falla", async () => {
       removeTeacherFromCourse.mockRejectedValue(new Error("Error DB"));
-      await expect(removeTeacherFromCourseService(1)).rejects.toThrow("Error DB");
+      await expect(removeTeacherFromCourseService(1)).rejects.toThrow(
+        "Error DB"
+      );
     });
   });
 });

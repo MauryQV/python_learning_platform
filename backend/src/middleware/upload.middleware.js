@@ -4,16 +4,20 @@ import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 const mimeToFormat = (mimetype) => {
   switch (mimetype) {
-    case "image/jpeg": return "jpg";
-    case "image/png":  return "png";
-    case "image/webp": return "webp";
-    default:           return undefined;
+    case "image/jpeg":
+      return "jpg";
+    case "image/png":
+      return "png";
+    case "image/webp":
+      return "webp";
+    default:
+      return undefined;
   }
 };
 
@@ -33,7 +37,7 @@ const storage = new CloudinaryStorage({
       public_id: publicId,
       resource_type: "image",
       allowed_formats: ["jpg", "jpeg", "png", "webp"],
-      format: mimeToFormat(file.mimetype), 
+      format: mimeToFormat(file.mimetype),
       transformation: [{ width: 512, height: 512, crop: "limit" }],
     };
   },
@@ -50,4 +54,3 @@ export const avatarUpload = multer({
   limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB max
   fileFilter,
 }).single("avatar");
-

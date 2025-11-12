@@ -10,12 +10,33 @@ import { hasRole, verifyToken } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-router.post("/create-course",verifyToken,hasRole("admin_teacher"), courseSchemaValidate, createCourseController);
+router.post(
+  "/create-course",
+  verifyToken,
+  hasRole("admin_teacher"),
+  courseSchemaValidate,
+  createCourseController
+);
 
-router.get("/courses",verifyToken ,hasRole("admin_teacher"),getAllCoursesController);
+router.get(
+  "/courses",
+  verifyToken,
+  hasRole("admin_teacher"),
+  getAllCoursesController
+);
 
-router.post("/:courseId/teacher/:teacherId",verifyToken,hasRole("admin_teacher") ,assignTeacherToCourseController);
+router.post(
+  "/:courseId/teacher/:teacherId",
+  verifyToken,
+  hasRole("admin_teacher"),
+  assignTeacherToCourseController
+);
 
-router.delete("/:courseId",verifyToken,hasRole("admin_teacher"), removeTeacherFromCourseController);
+router.delete(
+  "/:courseId",
+  verifyToken,
+  hasRole("admin_teacher"),
+  removeTeacherFromCourseController
+);
 
 export default router;

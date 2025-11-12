@@ -2,6 +2,8 @@ import { createTopicService } from "../services/topic.service.js";
 
 export const createTopicController = async(req, res, next) => {
     const {title, description, order, courseId} = req.body;
+    order = parseInt(order);
+    courseId = parseInt(courseId);
 try{
     const topic = await createTopicService(
         title,

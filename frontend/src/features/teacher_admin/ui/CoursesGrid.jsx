@@ -1,3 +1,4 @@
+// frontend/src/features/teacher_admin/ui/CoursesGrid.jsx
 import { Box } from "@mui/material";
 import CourseCard from "./CourseCard";
 
@@ -6,6 +7,7 @@ export default function CoursesGrid({
   search = "",
   filter = "all",
   onEdit,
+  onAssign, 
 }) {
   const term = search.trim().toLowerCase();
 
@@ -34,9 +36,11 @@ export default function CoursesGrid({
     >
       {filtered.map((course) => (
         <Box key={course.id} sx={{ width: "100%" }}>
-          <CourseCard course={course} onEdit={onEdit} />
+          {/*ahora pasamos onAssign a la tarjeta */}
+          <CourseCard course={course} onEdit={onEdit} onAssign={onAssign} />
         </Box>
       ))}
     </Box>
   );
 }
+

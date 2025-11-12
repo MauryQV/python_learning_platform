@@ -1,17 +1,12 @@
-// frontend/src/features/teacher_admin/api/teacherAdminApi.js
+// C:\GS\python_learning_platform\frontend\src\features\teacher_admin\api\teacherAdminApi.js
 import { api } from "@/api/axiosInstance";
 
-/**
- * Normaliza el curso del backend a la tarjeta de UI.
- * backend → { id, name, description, startDate, endDate, status, code, teacher:{id,name,email}, numeroEstudiantes }
- * UI     → { id, title, description, teacher, students, duration, status, emoji, gradient, code }
- */
+/** Normaliza un curso del backend a la tarjeta de UI */
 function mapCourse(c) {
   const title = c?.name ?? "(Sin nombre)";
   const teacherName = c?.teacher?.name ?? "Sin docente asignado";
   const students = typeof c?.numeroEstudiantes === "number" ? c.numeroEstudiantes : 0;
 
-  // duración calculada en horas si hay fechas
   let duration = "";
   try {
     if (c?.startDate && c?.endDate) {
@@ -24,16 +19,16 @@ function mapCourse(c) {
   } catch {}
 
   return {
-    id: c?.id ?? c?.courseId ?? crypto.randomUUID(),
+    id: c?.id ?? c?.courseId ?? c?._id ?? crypto.randomUUID(),
     title,
     description: c?.description ?? "",
     teacher: teacherName,
     students,
     duration,
     status: (c?.status ?? "active").toLowerCase(),
-    code: c?.code ?? "",             // ← incluye code en la UI
     emoji: "📘",
     gradient: "linear-gradient(90deg,#a5d8ff,#c3f0ff)",
+    code: c?.code ?? "",
     _raw: c,
   };
 }
@@ -43,30 +38,28 @@ async function safeGet(url) {
     const res = await api.get(url);
     return { ok: true, data: res.data };
   } catch (err) {
-    console.error(`teacherAdminApi GET ${url} error:`, err?.response ?? err);
     return { ok: false, error: err?.response ?? err };
   }
 }
 
 export const teacherAdminApi = {
-  // ===== LISTADOS =====
+  // Lista cursos (soporta {courses:[]} o [])
   async listCourses() {
     const r = await safeGet("/course/courses");
     if (!r.ok) {
       return {
         items: [],
-        error: r.error?.data?.message || r.error?.statusText || "Error 500 en backend",
+        error: r.error?.data?.message || r.error?.statusText || "Error al listar cursos",
       };
     }
     const payload = r.data;
-    const list = Array.isArray(payload)
-      ? payload
-      : Array.isArray(payload?.courses)
-        ? payload.courses
-        : [];
+    const list = Array.isArray(payload) ? payload
+      : Array.isArray(payload?.courses) ? payload.courses
+      : [];
     return { items: list.map(mapCourse), error: null };
   },
 
+  // Lista usuarios y filtra docentes por rol
   async listTeachers() {
     const r = await safeGet("/admin/users");
     if (!r.ok) {
@@ -78,9 +71,7 @@ export const teacherAdminApi = {
 
     const teachers = raw.filter(u => {
       const roles = Array.isArray(u?.roles)
-        ? u.roles
-            .map(x => (typeof x === "string" ? x : (x?.name || x?.role?.name || "")))
-            .map(s => String(s).toLowerCase())
+        ? u.roles.map(x => (typeof x === "string" ? x : (x?.name || x?.role?.name || ""))).map(s => String(s).toLowerCase())
         : (typeof u?.role === "string" ? [u.role.toLowerCase()] : []);
       return roles.includes("teacher") || roles.includes("instructor");
     });
@@ -90,47 +81,41 @@ export const teacherAdminApi = {
       name: [u?.firstName, u?.lastName].filter(Boolean).join(" ").trim() || (u?.email || "Docente"),
       email: u?.email || "",
     }));
-
     return { items: mapped, error: null };
   },
 
-  // ===== ACCIONES =====
-  /**
-   * Crea curso en backend.
-   * Backend requiere: { name, description, startDate, endDate, code }
-   * Opcionalmente luego asignamos docente por endpoint aparte.
-   */
-  async createCourse({ name, description, status, durationHours, code }) {
-    // fallbacks por si faltan datos desde el diálogo
-    const safeName = String(name ?? "").trim() || "(Sin nombre)";
-    const safeCode = (code && String(code).trim()) || `LP-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-
-    const start = new Date();
-    const end = new Date(start.getTime() + Math.max(1, Number(durationHours) || 1) * 60 * 60 * 1000);
-
-    const body = {
-      name: safeName,
-      description: description ?? "",
-      startDate: start.toISOString(),
-      endDate: end.toISOString(),
-      code: safeCode,
-      // NOTA: teacherId no se usa en create; se asigna en otro endpoint
-    };
-
-    const res = await api.post("/course/create-course", body);
-    const created = res?.data?.course ?? res?.data; // el controller responde { message, course }
-    return mapCourse(created);
+  /** ✅ Crea curso con EXACTAMENTE los campos que pide el backend */
+  async createCourse({ name, description, startDate, endDate, code }) {
+    try {
+      const res = await api.post("/course/create-course", {
+        name,
+        description,  // NO vacío: valida antes de enviar
+        startDate,    // ISO string
+        endDate,      // ISO string
+        code,         // único
+      });
+      // controller retorna { message, course }
+      const course = res?.data?.course ?? res?.data;
+      return mapCourse(course);
+    } catch (err) {
+      const payload = err?.response?.data;
+      const msg =
+        payload?.error ||
+        payload?.message ||
+        (Array.isArray(payload?.details) ? payload.details.join(", ") : "") ||
+        err?.message ||
+        "Bad Request";
+      const e = new Error(msg);
+      e.response = err?.response;
+      throw e;
+    }
   },
 
-  /**
-   * Asigna docente a curso.
-   */
+  /** ✅ Asigna docente por ruta separada */
   async assignTeacherToCourse(courseId, teacherId) {
     const res = await api.post(`/course/${courseId}/teacher/${teacherId}`);
-    const updated = res?.data?.course ?? res?.data;
-    return mapCourse(updated);
+    return res.data;
   },
 };
 
 export default teacherAdminApi;
-

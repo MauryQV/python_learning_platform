@@ -11,6 +11,7 @@ import CoursesGrid from "../../features/teacher_admin/ui/CoursesGrid";
 import SearchBar from "../../features/teacher_admin/ui/SearchBar";
 import CourseCreateDialog from "../../features/teacher_admin/ui/CourseCreateDialog";
 import CourseEditDialog from "../../features/teacher_admin/ui/CourseEditDialog";
+import AssignmentDialog from "../../features/teacher_admin/ui/AssignmentDialog"; // 👈 nuevo
 
 import { useAuth } from "@/context/AuthContext";
 import { teacherAdminApi } from "@/features/teacher_admin/api/teacherAdminApi";
@@ -40,6 +41,10 @@ export default function TeacherAdminCoursesPage() {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [openEdit, setOpenEdit] = useState(false);
 
+  // Estado para asignación de docente
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [courseToAssign, setCourseToAssign] = useState(null);
+
   // Datos
   const [courses, setCourses] = useState([]);
   const [teachers, setTeachers] = useState([]);
@@ -57,8 +62,8 @@ export default function TeacherAdminCoursesPage() {
   // ====== helpers ======
   const refreshData = async () => {
     const [c, t] = await Promise.all([
-      teacherAdminApi.listCourses(),   // devuelve { items, error }
-      teacherAdminApi.listTeachers(),  // devuelve { items, error }
+      teacherAdminApi.listCourses(),
+      teacherAdminApi.listTeachers(),
     ]);
 
     if (c.error) enqueueSnackbar(`No se pudo cargar cursos: ${c.error}`, { variant: "error" });
@@ -86,6 +91,12 @@ export default function TeacherAdminCoursesPage() {
     setOpenEdit(true);
   };
 
+  // abrir modal de asignación
+  const handleOpenAssign = (course) => {
+    setCourseToAssign(course);
+    setAssignOpen(true);
+  };
+
   // (demo visual) edición local
   const handleSaveEdit = async (payload) => {
     setCourses(prev =>
@@ -110,22 +121,13 @@ export default function TeacherAdminCoursesPage() {
   };
 
   const handleDeleteCourse = async (id) => {
-    // (opcional) aquí podrías llamar a DELETE si tu backend lo expone
     setCourses(prev => prev.filter(c => c.id !== id));
     enqueueSnackbar("Curso eliminado en la vista", { variant: "info" });
   };
 
-  /**
-   * Crear curso con backend:
-   * - Recibe desde el Dialog un payload YA listo para el backend:
-   *   { name, description, startDate, endDate, code, (opcional) teacherId }
-   * - Crea el curso
-   * - Si vino teacherId, intenta asignarlo
-   * - Refresca la lista para ver el code y demás datos reales
-   */
+  // Crear curso + asignar opcional
   const handleCreate = async (payloadFromDialog) => {
     try {
-      // 1) crear curso (server requiere exactamente name, description, startDate, endDate, code)
       const created = await teacherAdminApi.createCourse({
         name: payloadFromDialog.name,
         description: payloadFromDialog.description,
@@ -134,14 +136,12 @@ export default function TeacherAdminCoursesPage() {
         code: payloadFromDialog.code,
       });
 
-      // Intentamos obtener ID robustamente (según cómo normalices en teacherAdminApi)
       const createdId =
         created?.id ??
         created?.courseId ??
         created?._raw?.course?.courseId ??
         created?._raw?.id;
 
-      // 2) asignar docente si viene del modal (opcional)
       const teacherId =
         payloadFromDialog.teacherId ??
         payloadFromDialog.docenteId ??
@@ -156,10 +156,7 @@ export default function TeacherAdminCoursesPage() {
         }
       }
 
-      // 3) refrescar listado desde backend para ver datos reales (incluye code)
       await refreshData();
-
-      // 4) cerrar modal + toast
       setOpenCreate(false);
       const titleShown = created?.title || created?.name || "Curso";
       enqueueSnackbar(`"${titleShown}" creado`, { variant: "success" });
@@ -167,6 +164,13 @@ export default function TeacherAdminCoursesPage() {
       const msg = e?.response?.data?.message || e?.message || "Error";
       enqueueSnackbar(`No se pudo crear: ${msg}`, { variant: "error" });
     }
+  };
+
+  // Asignar desde el modal dedicado
+  const handleAssign = async (courseId, teacherId) => {
+    await teacherAdminApi.assignTeacherToCourse(courseId, teacherId);
+    await refreshData();
+    enqueueSnackbar("Docente asignado", { variant: "success" });
   };
 
   const handleLogout = () => {
@@ -290,21 +294,6 @@ export default function TeacherAdminCoursesPage() {
             >
               Cerrar sesión
             </Button>
-
-            <Box sx={{ display: { xs: "none", sm: "flex" }, alignItems: "center", gap: 1.2 }}>
-              <Box
-                sx={{
-                  width: 40, height: 40, borderRadius: "50%",
-                  bgcolor: "#e5e7eb", display: "grid", placeItems: "center", fontWeight: 800,
-                }}
-              >
-                {initials}
-              </Box>
-              <Box sx={{ lineHeight: 1 }}>
-                <Typography variant="body2" fontWeight={700}>{displayName}</Typography>
-                <Typography variant="caption" color="text.secondary">{roleLabel}</Typography>
-              </Box>
-            </Box>
           </Box>
         </Box>
 
@@ -349,6 +338,7 @@ export default function TeacherAdminCoursesPage() {
               search={search}
               filter={filterStatus}
               onEdit={handleOpenEdit}
+              onAssign={handleOpenAssign}   
             />
           </Box>
         </Box>
@@ -371,6 +361,16 @@ export default function TeacherAdminCoursesPage() {
         onSave={handleSaveEdit}
         onDelete={handleDeleteCourse}
       />
+
+      {/* Assignment Dialog */}
+      <AssignmentDialog
+        open={assignOpen}
+        onClose={() => setAssignOpen(false)}
+        course={courseToAssign}
+        teachers={teachers}
+        onAssign={handleAssign}
+      />
     </Box>
   );
 }
+

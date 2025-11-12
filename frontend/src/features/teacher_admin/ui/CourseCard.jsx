@@ -1,6 +1,15 @@
+// frontend/src/features/teacher_admin/ui/CourseCard.jsx
 import { Box, Typography, Button, Chip } from "@mui/material";
 
-export default function CourseCard({ course, onEdit }) {
+export default function CourseCard({ course, onEdit, onAssign }) {
+  const showAssign = !course.teacher || course.teacher === "Sin docente asignado";
+  //const showAssign = true;
+
+  const teacherLabel =
+    course.teacher && String(course.teacher).trim()
+      ? course.teacher
+      : "Sin docente asignado";
+
   return (
     <Box
       sx={{
@@ -54,13 +63,21 @@ export default function CourseCard({ course, onEdit }) {
           {course.title}
         </Typography>
 
-        {/* 🔑 Código del curso */}
-        <Typography variant="caption" sx={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace", display: "block", mb: 0.5 }}>
+        {/* Código del curso */}
+        <Typography
+          variant="caption"
+          sx={{
+            fontFamily:
+              "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+            display: "block",
+            mb: 0.5,
+          }}
+        >
           Código: <strong>{course.code || "(sin código)"}</strong>
         </Typography>
 
         <Typography variant="body2" color="text.secondary">
-          👤 {course.teacher}
+          👤 {teacherLabel}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           👥 {course.students} estudiantes&nbsp;&nbsp; ⏱ {course.duration}
@@ -72,13 +89,32 @@ export default function CourseCard({ course, onEdit }) {
         <Button
           variant="contained"
           size="small"
-          sx={{ bgcolor: "#f6d458", color: "#000", fontWeight: 700, ":hover": { bgcolor: "#eac94f" } }}
+          sx={{
+            bgcolor: "#f6d458",
+            color: "#000",
+            fontWeight: 700,
+            ":hover": { bgcolor: "#eac94f" },
+          }}
           onClick={() => onEdit?.(course)}
         >
           Editar
         </Button>
-        <Button variant="outlined" size="small">Ver</Button>
+
+        <Button variant="outlined" size="small">
+          Ver
+        </Button>
+
+        {showAssign && (
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => onAssign?.(course)}
+          >
+            Asignar Docente
+          </Button>
+        )}
       </Box>
     </Box>
   );
 }
+

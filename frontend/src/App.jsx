@@ -28,6 +28,16 @@ const TeacherAdminCoursesPage = lazy(() =>
   import("./pages/teacher_admin/TeacherAdminCoursesPage.jsx")
 );
 
+// 🆕 Docentes (lista)
+const TeachersPage = lazy(() =>
+  import("./pages/teacher_admin/TeachersPage.jsx")
+);
+
+// (opcional) Estudiantes cuando lo tengas
+// const StudentsPage = lazy(() =>
+//   import("./pages/teacher_admin/StudentsPage.jsx")
+// );
+
 function NotFound() {
   return (
     <div style={{ textAlign: "center", padding: "4rem" }}>
@@ -90,11 +100,12 @@ export default function App() {
                   }
                 />
 
-                {/* 🆕 Teacher Admin area */}
+                {/* Teacher Admin area */}
                 <Route
                   path="/teacher-admin"
                   element={<Navigate to="/teacher-admin/courses" replace />}
                 />
+
                 <Route
                   path="/teacher-admin/courses"
                   element={
@@ -103,6 +114,26 @@ export default function App() {
                     </ProtectedRoute>
                   }
                 />
+
+                {/* ✅ NUEVA RUTA: Docentes */}
+                <Route
+                  path="/teacher-admin/teachers"
+                  element={
+                    <ProtectedRoute roles={['admin_teacher']}>
+                      <TeachersPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* (opcional) Estudiantes */}
+                {/* <Route
+                  path="/teacher-admin/students"
+                  element={
+                    <ProtectedRoute roles={['admin_teacher']}>
+                      <StudentsPage />
+                    </ProtectedRoute>
+                  }
+                /> */}
 
                 {/* 404 */}
                 <Route path="*" element={<NotFound />} />

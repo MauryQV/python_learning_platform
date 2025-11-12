@@ -11,6 +11,10 @@ CREATE TABLE "User" (
     "emailVerifiedAt" TIMESTAMP(3),
     "googleId" TEXT,
     "profileImage" TEXT,
+    "birthday" TIMESTAMP(3),
+    "gender" TEXT,
+    "profession" TEXT,
+    "bio" VARCHAR(150),
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("userId")
 );
@@ -59,6 +63,8 @@ CREATE TABLE "Course" (
     "startDate" TIMESTAMP(3) NOT NULL,
     "endDate" TIMESTAMP(3),
     "status" TEXT NOT NULL DEFAULT 'active',
+    "code" TEXT NOT NULL,
+    "teacherId" INTEGER,
 
     CONSTRAINT "Course_pkey" PRIMARY KEY ("courseId")
 );
@@ -75,23 +81,12 @@ CREATE TABLE "Enrollment" (
 );
 
 -- CreateTable
-CREATE TABLE "Module" (
-    "moduleId" SERIAL NOT NULL,
+CREATE TABLE "Topic" (
+    "topicId" SERIAL NOT NULL,
     "courseId" INTEGER NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT,
-    "order" INTEGER NOT NULL,
-
-    CONSTRAINT "Module_pkey" PRIMARY KEY ("moduleId")
-);
-
--- CreateTable
-CREATE TABLE "Topic" (
-    "topicId" SERIAL NOT NULL,
-    "moduleId" INTEGER NOT NULL,
-    "title" TEXT NOT NULL,
-    "description" TEXT,
-    "order" INTEGER NOT NULL,
+    "order" INTEGER,
 
     CONSTRAINT "Topic_pkey" PRIMARY KEY ("topicId")
 );
@@ -189,7 +184,127 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "User_googleId_key" ON "User"("googleId");
 
 -- CreateIndex
+CREATE INDEX "User_status_idx" ON "User"("status");
+
+-- CreateIndex
+CREATE INDEX "User_email_status_idx" ON "User"("email", "status");
+
+-- CreateIndex
+CREATE INDEX "User_registeredAt_idx" ON "User"("registeredAt");
+
+-- CreateIndex
+CREATE INDEX "User_isVerified_idx" ON "User"("isVerified");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
+
+-- CreateIndex
+CREATE INDEX "UserRole_roleId_idx" ON "UserRole"("roleId");
+
+-- CreateIndex
+CREATE INDEX "UserRole_assignedAt_idx" ON "UserRole"("assignedAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Course_code_key" ON "Course"("code");
+
+-- CreateIndex
+CREATE INDEX "Course_status_idx" ON "Course"("status");
+
+-- CreateIndex
+CREATE INDEX "Course_startDate_idx" ON "Course"("startDate");
+
+-- CreateIndex
+CREATE INDEX "Course_endDate_idx" ON "Course"("endDate");
+
+-- CreateIndex
+CREATE INDEX "Course_status_startDate_idx" ON "Course"("status", "startDate");
+
+-- CreateIndex
+CREATE INDEX "Enrollment_userId_idx" ON "Enrollment"("userId");
+
+-- CreateIndex
+CREATE INDEX "Enrollment_courseId_idx" ON "Enrollment"("courseId");
+
+-- CreateIndex
+CREATE INDEX "Enrollment_status_idx" ON "Enrollment"("status");
+
+-- CreateIndex
+CREATE INDEX "Enrollment_userId_courseId_status_idx" ON "Enrollment"("userId", "courseId", "status");
+
+-- CreateIndex
+CREATE INDEX "Topic_courseId_idx" ON "Topic"("courseId");
+
+-- CreateIndex
+CREATE INDEX "Topic_order_idx" ON "Topic"("order");
+
+-- CreateIndex
+CREATE INDEX "MediaAsset_topicId_idx" ON "MediaAsset"("topicId");
+
+-- CreateIndex
+CREATE INDEX "MediaAsset_type_idx" ON "MediaAsset"("type");
+
+-- CreateIndex
+CREATE INDEX "Exercise_topicId_idx" ON "Exercise"("topicId");
+
+-- CreateIndex
+CREATE INDEX "Exercise_type_idx" ON "Exercise"("type");
+
+-- CreateIndex
+CREATE INDEX "Exercise_difficultyLevel_idx" ON "Exercise"("difficultyLevel");
+
+-- CreateIndex
+CREATE INDEX "Attempt_userId_idx" ON "Attempt"("userId");
+
+-- CreateIndex
+CREATE INDEX "Attempt_exerciseId_idx" ON "Attempt"("exerciseId");
+
+-- CreateIndex
+CREATE INDEX "Attempt_attemptedAt_idx" ON "Attempt"("attemptedAt");
+
+-- CreateIndex
+CREATE INDEX "Attempt_userId_exerciseId_idx" ON "Attempt"("userId", "exerciseId");
+
+-- CreateIndex
+CREATE INDEX "Attempt_result_idx" ON "Attempt"("result");
+
+-- CreateIndex
+CREATE INDEX "Submission_userId_idx" ON "Submission"("userId");
+
+-- CreateIndex
+CREATE INDEX "Submission_topicId_idx" ON "Submission"("topicId");
+
+-- CreateIndex
+CREATE INDEX "Submission_submittedAt_idx" ON "Submission"("submittedAt");
+
+-- CreateIndex
+CREATE INDEX "Submission_userId_topicId_idx" ON "Submission"("userId", "topicId");
+
+-- CreateIndex
+CREATE INDEX "TopicProgress_userId_idx" ON "TopicProgress"("userId");
+
+-- CreateIndex
+CREATE INDEX "TopicProgress_topicId_idx" ON "TopicProgress"("topicId");
+
+-- CreateIndex
+CREATE INDEX "TopicProgress_status_idx" ON "TopicProgress"("status");
+
+-- CreateIndex
+CREATE INDEX "TopicProgress_userId_topicId_idx" ON "TopicProgress"("userId", "topicId");
+
+-- CreateIndex
+CREATE INDEX "TopicProgress_completedAt_idx" ON "TopicProgress"("completedAt");
+
+-- CreateIndex
+CREATE INDEX "Diagnostic_userId_idx" ON "Diagnostic"("userId");
+
+-- CreateIndex
+CREATE INDEX "Diagnostic_courseId_idx" ON "Diagnostic"("courseId");
+
+-- CreateIndex
+CREATE INDEX "Diagnostic_takenAt_idx" ON "Diagnostic"("takenAt");
+
+-- CreateIndex
+CREATE INDEX "Diagnostic_userId_courseId_idx" ON "Diagnostic"("userId", "courseId");
 
 -- CreateIndex
 CREATE INDEX "EmailVerificationToken_userId_idx" ON "EmailVerificationToken"("userId");
@@ -213,16 +328,16 @@ ALTER TABLE "RolePermission" ADD CONSTRAINT "RolePermission_roleId_fkey" FOREIGN
 ALTER TABLE "UserPermission" ADD CONSTRAINT "UserPermission_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "Course" ADD CONSTRAINT "Course_teacherId_fkey" FOREIGN KEY ("teacherId") REFERENCES "User"("userId") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Enrollment" ADD CONSTRAINT "Enrollment_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("courseId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Enrollment" ADD CONSTRAINT "Enrollment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Module" ADD CONSTRAINT "Module_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("courseId") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Topic" ADD CONSTRAINT "Topic_moduleId_fkey" FOREIGN KEY ("moduleId") REFERENCES "Module"("moduleId") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Topic" ADD CONSTRAINT "Topic_courseId_fkey" FOREIGN KEY ("courseId") REFERENCES "Course"("courseId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "MediaAsset" ADD CONSTRAINT "MediaAsset_topicId_fkey" FOREIGN KEY ("topicId") REFERENCES "Topic"("topicId") ON DELETE RESTRICT ON UPDATE CASCADE;

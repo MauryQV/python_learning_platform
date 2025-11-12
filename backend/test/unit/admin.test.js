@@ -10,7 +10,7 @@ import {
   findAllUsers,
 } from "../../src/repositories/admin.repository.js";
 
-// 🔹 Mockear todo el repositorio de admin
+// Mockear todo el repositorio de admin
 jest.mock("../../src/repositories/admin.repository.js");
 
 describe("Admin Service", () => {
@@ -18,9 +18,6 @@ describe("Admin Service", () => {
     jest.clearAllMocks();
   });
 
-  // --------------------------------------
-  // updateUserRoleService
-  // --------------------------------------
   describe("updateUserRoleService", () => {
     it("debería actualizar el rol de un usuario correctamente", async () => {
       const mockUser = { id: 1, email: "test@correo.com", role: "tutor" };
@@ -45,9 +42,6 @@ describe("Admin Service", () => {
     });
   });
 
-  // --------------------------------------
-  // updateUserStatusService
-  // --------------------------------------
   describe("updateUserStatusService", () => {
     it("debería actualizar el estado de un usuario correctamente", async () => {
       const mockUser = { id: 1, email: "test@correo.com", status: "active" };

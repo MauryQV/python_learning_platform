@@ -2,10 +2,15 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import dotenv from "dotenv";
+import { queryMonitor } from "./src/middleware/query-monitor.middleware.js";
 import adminRoutes from "./src/routes/admin.route.js";
 import authRoutes from "./src/routes/auth.route.js";
 import profileRoutes from "./src/routes/profile.route.js";
 import roleRoutes from "./src/routes/role.route.js";
+import teacherPermissionRoutes from "./src/routes/teacherPermission.route.js";
+import courseRoutes from "./src/routes/course.route.js";
+import teacherRoutes from "./src/routes/teacher.route.js";
+import studentRoutes from "./src/routes/student.routes.js";
 import { errorHandler } from "./src/middleware/error.middleware.js";
 
 dotenv.config();
@@ -38,10 +43,9 @@ app.use(
   })
 );
 
-app.get("/api/health", (req, res) => {
-  res.status(200).json({ message: "SRIVEEEE" });
-});
-
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(queryMonitor);
 app.use(express.json());
 
 app.use("/api/auth", authRoutes);
@@ -51,6 +55,15 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/admin", adminRoutes);
 
 app.use("/api/roles", roleRoutes);
+
+app.use("/api/teacher", teacherPermissionRoutes);
+
+app.use("/api/course", courseRoutes);
+
+app.use("/api/teacher", teacherRoutes);
+
+app.use("/api/student", studentRoutes);
+
 app.use(errorHandler);
 
 app.listen(PORT, () => {

@@ -110,3 +110,38 @@ export const findByEmailWithRoles = async (email) => {
     },
   });
 };
+
+const baseSelect = {
+  userId: true,
+  firstName: true,
+  lastName: true,
+  email: true,
+  status: true,
+  profileImage: true,
+  birthday: true,
+  gender: true,
+  profession: true,
+  bio: true,
+};
+
+export const findProfileById = async (userId) => {
+  return await prisma.user.findUnique({
+    where: { userId },
+    select: baseSelect,
+  });
+};
+
+export const updateProfile = async (userId, data) => {
+  return await prisma.user.update({
+    where: { userId },
+    data: {
+      firstName: data.firstName ?? undefined,
+      lastName: data.lastName ?? undefined,
+      birthday: data.birthday ?? undefined,
+      gender: data.gender ?? undefined,
+      profession: data.profession ?? undefined,
+      bio: data.bio ?? undefined,
+    },
+    select: baseSelect,
+  });
+};

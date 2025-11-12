@@ -1,16 +1,65 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { LIMITS } from "@/shared/config/limits";
-import { profileApi } from "@/features/profile/api/profileApi";
+import { profileApi } from "@/api/profile"; 
 import { useAuth } from "@/context/AuthContext";
 
 export function useProfileModel() {
-  const { user } = useAuth(); 
+  const { user } = useAuth();
+
+  const normalizeUser = (u) => {
+    if (!u || typeof u !== "object") {
+      return {
+        name: "",
+        role: "Software Developer",
+        email: "",
+        bio: "Bio",
+        profileImage: "",
+        avatarUrl: "",
+        birthday: "",
+        gender: "",
+        profession: "",
+        goals: ["Texto"],
+        skills: [
+          { label: "Software", value: 80 },
+          { label: "Mobile App", value: 70 },
+          { label: "Full Stack", value: 90 },
+        ],
+      };
+    }
+    const profileImage = u.profileImage || u.avatarUrl || "";
+    const avatarUrl = u.avatarUrl || u.profileImage || "";
+    return {
+      name: u.name || "",
+      role: u.role || "",
+      email: u.email || "",
+      bio: u.bio || "Bio",
+      profileImage,
+      avatarUrl,
+      birthday: u.birthday || "",
+      gender: u.gender || "",
+      profession: u.profession || "",
+      goals: Array.isArray(u.goals) ? u.goals : ["Texto"],
+      skills:
+        Array.isArray(u.skills) && u.skills.length
+          ? u.skills
+          : [
+              { label: "Software", value: 80 },
+              { label: "Mobile App", value: 70 },
+              { label: "Full Stack", value: 90 },
+            ],
+    };
+  };
+
   const [initialUser, setInitialUser] = useState({
     name: "",
-    role: "Software Developer",
+    role: "",
     email: "",
     bio: "Bio",
-    avatarUrl: "",
+    profileImage: "",
+    avatarUrl: "", 
+    birthday: "",
+    gender: "",
+    profession: "",
     goals: ["Texto"],
     skills: [
       { label: "Software", value: 80 },
@@ -26,38 +75,60 @@ export function useProfileModel() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         const base = user
           ? {
-              name: user.firstName ? `${user.firstName} ${user.lastName ?? ""}`.trim() : (user.name || ""),
-              role: user.role || "Software Developer",
+              name: user.firstName
+                ? `${user.firstName} ${user.lastName ?? ""}`.trim()
+                : user.name || "",
+              role: user.role || user.profession || "",
               email: user.email || "",
               bio: user.bio || "Bio",
-              avatarUrl: user.avatarUrl || "",
+              profileImage: user.profileImage || user.avatarUrl || "",
+              avatarUrl: user.avatarUrl || user.profileImage || "",
+              birthday: user.birthday || "",
+              gender: user.gender || "",
+              profession: user.profession || "",
               goals: user.goals || ["Texto"],
-              skills: user.skills || [
-                { label: "Software", value: 80 },
-                { label: "Mobile App", value: 70 },
-                { label: "Full Stack", value: 90 },
-              ],
+              skills:
+                user.skills || [
+                  { label: "Software", value: 80 },
+                  { label: "Mobile App", value: 70 },
+                  { label: "Full Stack", value: 90 },
+                ],
             }
-          : await profileApi.me();
+          : await profileApi.me(); 
 
         if (!mounted) return;
 
-        setInitialUser(base);
-        setForm({ name: base.name || "", bio: base.bio || "" });
-        setGoals(Array.isArray(base.goals) ? base.goals : ["Texto"]);
+        const norm = normalizeUser(base);
+        setInitialUser(norm);
+        setForm({ name: norm.name || "", bio: norm.bio || "" });
+        setGoals(Array.isArray(norm.goals) ? norm.goals : ["Texto"]);
       } catch {
-  setError("No se pudo cargar el perfil");
-}
+        setError("No se pudo cargar el perfil");
+      }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [user]);
+
+  const fetchProfile = async () => {
+    try {
+      const data = await profileApi.me();
+      const norm = normalizeUser(data); 
+      setInitialUser(norm);
+      setForm({ name: norm.name || "", bio: norm.bio || "" });
+      setGoals(Array.isArray(norm.goals) ? norm.goals : ["Texto"]);
+    } catch (e) {
+      console.error("Failed to fetch profile:", e);
+      setError("No se pudo actualizar el perfil");
+    }
+  };
 
   const onChange = (k) => (e) => {
     const v = e.target.value;
@@ -74,7 +145,8 @@ export function useProfileModel() {
 
   const validate = useCallback(() => {
     if (!form.name.trim()) return "El nombre es obligatorio";
-    if (form.bio.length > LIMITS.MAX_BIO) return `Máximo ${LIMITS.MAX_BIO} caracteres en la biografía`;
+    if (form.bio.length > LIMITS.MAX_BIO)
+      return `Máximo ${LIMITS.MAX_BIO} caracteres en la biografía`;
     return "";
   }, [form]);
 
@@ -89,11 +161,14 @@ export function useProfileModel() {
         name: form.name,
         bio: form.bio,
         goals,
-        // skills: podrías enviarlas cuando agregues editor de skills
       });
       setDirty(false);
     } catch (err) {
-      setError(err?.response?.data?.message || err?.message || "No se pudo guardar el perfil");
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "No se pudo guardar el perfil"
+      );
     } finally {
       setSaving(false);
     }
@@ -107,20 +182,40 @@ export function useProfileModel() {
     setGoalInput("");
     setDirty(true);
   };
-  const removeGoal = (val) => { setGoals((g) => g.filter((x) => x !== val)); setDirty(true); };
-  const onGoalKey = (e) => { if (e.key === "Enter") { e.preventDefault(); addGoal(); } };
+
+  const removeGoal = (val) => {
+    setGoals((g) => g.filter((x) => x !== val));
+    setDirty(true);
+  };
+
+  const onGoalKey = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addGoal();
+    }
+  };
 
   const sectionTitleProps = useMemo(() => ({}), []);
 
   return {
     state: {
-      initialUser, form, dirty, saving, error,
-      goals, goalInput,
+      initialUser,
+      form,
+      dirty,
+      saving,
+      error,
+      goals,
+      goalInput,
     },
     actions: {
       setGoalInput,
-      onChange, onCancel, onSubmit,
-      addGoal, removeGoal, onGoalKey,
+      onChange,
+      onCancel,
+      onSubmit,
+      addGoal,
+      removeGoal,
+      onGoalKey,
+      fetchProfile,
     },
     ui: {
       sectionTitleProps,

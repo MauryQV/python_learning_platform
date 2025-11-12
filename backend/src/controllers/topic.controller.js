@@ -1,23 +1,24 @@
 import { createTopicService, updateTopicService , getAllTopicsService } from "../services/topic.service.js";
 
-export const createTopicController = async(req, res, next) => {
-    const {title, description, order, courseId} = req.body;
-    order = Number(order);
-    courseId = Number(courseId);
-try{
+export const createTopicController = async (req, res, next) => {
+  try {
+    const { title, description, order, courseId } = req.body;
+
+    const numericOrder = Number(order);
+    const numericCourseId = Number(courseId);
+
     const topic = await createTopicService(
-        title,
-        description,
-        order,
-        courseId
-    )
+      title,
+      description,
+      numericOrder,
+      numericCourseId
+    );
+
     res.status(201).json(topic);
-}
-catch(error)
-{
+  } catch (error) {
     next(error);
-}
-}
+  }
+};
 
 
 

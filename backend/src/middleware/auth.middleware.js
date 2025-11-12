@@ -56,9 +56,9 @@ export const isAdmin = (req, res, next) => {
 
 export const hasRole = (roleName) => (req, res, next) => {
   if (!req.user || req.user.role !== roleName) {
-    return res.status(403).json({
+    return res.status(401).json({
       success: false,
-      message: `Requiere rol: ${roleName}`,
+      message: "You dont have the required role.",
     });
   }
   next();

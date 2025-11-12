@@ -5,16 +5,17 @@ import {
   assignTeacherToCourseController,
   removeTeacherFromCourseController,
 } from "../controllers/course.controller.js";
-import { courseSchemaValidate } from "../middleware/admin.middleware.js";
+import { courseSchemaValidate } from "../middleware/course.middleware.js";
+import { hasRole, verifyToken } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-router.post("/create-course", courseSchemaValidate, createCourseController);
+router.post("/create-course",verifyToken,hasRole("admin_teacher"), courseSchemaValidate, createCourseController);
 
-router.get("/courses", getAllCoursesController);
+router.get("/courses",verifyToken ,hasRole("admin_teacher"),getAllCoursesController);
 
-router.post("/:courseId/teacher/:teacherId", assignTeacherToCourseController);
+router.post("/:courseId/teacher/:teacherId",verifyToken,hasRole("admin_teacher") ,assignTeacherToCourseController);
 
-router.delete("/:courseId", removeTeacherFromCourseController);
+router.delete("/:courseId",verifyToken,hasRole("admin_teacher"), removeTeacherFromCourseController);
 
 export default router;

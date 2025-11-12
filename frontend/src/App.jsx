@@ -1,3 +1,4 @@
+// /frontend/src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import { AuthProvider } from "./context/AuthContext";
@@ -33,12 +34,7 @@ const TeachersPage = lazy(() =>
   import("./pages/teacher_admin/TeachersPage.jsx")
 );
 
-// 🧑‍🎓 (opcional) Estudiantes
-// const StudentsPage = lazy(() =>
-//   import("./pages/teacher_admin/StudentsPage.jsx")
-// );
-
-// 🆕 Nueva vista del PROFESOR (teacher_edit)
+// 🆕 Nueva vista del PROFESOR (teacher_edit → /teacher-edit/…)
 const TeacherEditCoursesPage = lazy(() =>
   import("./pages/teacher_edit/TeacherEditCoursesPage.jsx")
 );
@@ -132,12 +128,12 @@ export default function App() {
 
                 {/* 🆕 PROFESOR (Teacher Edit) */}
                 <Route
-                  path="/teacher_edit"
-                  element={<Navigate to="/teacher_edit/courses" replace />}
+                  path="/teacher-edit"
+                  element={<Navigate to="/teacher-edit/courses" replace />}
                 />
 
                 <Route
-                  path="/teacher_edit/courses"
+                  path="/teacher-edit/courses"
                   element={
                     <ProtectedRoute roles={["teacher_edit"]}>
                       <TeacherEditCoursesPage />

@@ -24,22 +24,29 @@ export default function ProtectedRoute({ children, adminOnly = false, roles = nu
 
   const role = String(user?.role || "").toLowerCase();
 
+  const roleRedirects = {
+    admin: "/admin",
+    admin_teacher: "/teacher-admin/courses",
+    teacher_edit: "/teacher-edit/courses", 
+    student: "/profile",
+  };
+
+  
   if (roles && !roles.includes(role)) {
-    return <Navigate to="/unauthorized" replace />;
+    const fallback = roleRedirects[role] || "/unauthorized";
+    return <Navigate to={fallback} replace />;
   }
 
-  if (adminOnly) {
-    if (role !== "admin") {
-      return <Navigate to="/profile" replace />;
+  if (adminOnly && role !== "admin") {
+    const fallback = roleRedirects[role] || "../TeacherEditCoursesPage";
+    return <Navigate to={fallback} replace />;
+  }
+
+  if (!adminOnly && !roles) {
+    const defaultDest = roleRedirects[role];
+    if (defaultDest) {
+      return <Navigate to={defaultDest} replace />;
     }
-  }
-
-  if (!adminOnly && !roles && role === "admin") {
-    return <Navigate to="/admin" replace />;
-  }
-
-  if (!roles && role === "admin_teacher") {
-    return <Navigate to="/teacher-admin/courses" replace />;
   }
 
   return children;

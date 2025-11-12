@@ -1,3 +1,4 @@
+// /frontend/src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import { AuthProvider } from "./context/AuthContext";
@@ -28,15 +29,15 @@ const TeacherAdminCoursesPage = lazy(() =>
   import("./pages/teacher_admin/TeacherAdminCoursesPage.jsx")
 );
 
-// 🆕 Docentes (lista)
+// 🧑‍🏫 Docentes (lista para el admin)
 const TeachersPage = lazy(() =>
   import("./pages/teacher_admin/TeachersPage.jsx")
 );
 
-// (opcional) Estudiantes cuando lo tengas
-// const StudentsPage = lazy(() =>
-//   import("./pages/teacher_admin/StudentsPage.jsx")
-// );
+// 🆕 Nueva vista del PROFESOR (teacher_edit → /teacher-edit/…)
+const TeacherEditCoursesPage = lazy(() =>
+  import("./pages/teacher_edit/TeacherEditCoursesPage.jsx")
+);
 
 function NotFound() {
   return (
@@ -109,7 +110,7 @@ export default function App() {
                 <Route
                   path="/teacher-admin/courses"
                   element={
-                    <ProtectedRoute roles={['admin_teacher']}>
+                    <ProtectedRoute roles={["admin_teacher"]}>
                       <TeacherAdminCoursesPage />
                     </ProtectedRoute>
                   }
@@ -119,21 +120,26 @@ export default function App() {
                 <Route
                   path="/teacher-admin/teachers"
                   element={
-                    <ProtectedRoute roles={['admin_teacher']}>
+                    <ProtectedRoute roles={["admin_teacher"]}>
                       <TeachersPage />
                     </ProtectedRoute>
                   }
                 />
 
-                {/* (opcional) Estudiantes */}
-                {/* <Route
-                  path="/teacher-admin/students"
+                {/* 🆕 PROFESOR (Teacher Edit) */}
+                <Route
+                  path="/teacher-edit"
+                  element={<Navigate to="/teacher-edit/courses" replace />}
+                />
+
+                <Route
+                  path="/teacher-edit/courses"
                   element={
-                    <ProtectedRoute roles={['admin_teacher']}>
-                      <StudentsPage />
+                    <ProtectedRoute roles={["teacher_edit"]}>
+                      <TeacherEditCoursesPage />
                     </ProtectedRoute>
                   }
-                /> */}
+                />
 
                 {/* 404 */}
                 <Route path="*" element={<NotFound />} />

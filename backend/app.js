@@ -11,6 +11,7 @@ import teacherPermissionRoutes from "./src/routes/teacherPermission.route.js";
 import courseRoutes from "./src/routes/course.route.js";
 import teacherRoutes from "./src/routes/teacher.route.js";
 import studentRoutes from "./src/routes/student.routes.js";
+import topicRoutes from "./src/routes/topic.route.js"
 import { errorHandler } from "./src/middleware/error.middleware.js";
 
 dotenv.config();
@@ -63,6 +64,9 @@ app.use("/api/course", courseRoutes);
 app.use("/api/teacher", teacherRoutes);
 
 app.use("/api/student", studentRoutes);
+
+app.use("/api/topic", topicRoutes)
+
 
 app.use(errorHandler);
 

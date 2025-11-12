@@ -38,7 +38,6 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  // 1) Carga inicial desde storage
   const [token, setToken] = useState(() =>
     localStorage.getItem(AUTH_STORAGE_KEYS.token)
   );
@@ -49,21 +48,18 @@ export const AuthProvider = ({ children }) => {
       const parsed = JSON.parse(savedUser);
       return { ...parsed, role: normalizeRole(parsed) };
     }
-    return null; // si no hay user guardado, tal vez lo reconstruimos desde el JWT luego
+    return null;
   });
 
   const [loading, setLoading] = useState(true);
 
-  // 2) Sincroniza header de axios y bootstrap del usuario si falta
   useEffect(() => {
     if (token) {
       api.defaults.headers.common.Authorization = `Bearer ${token}`;
-      // Si no hay user en storage, reconstruye uno mínimo desde el token
       if (!user) {
         const minimal = userFromJwt(token);
         if (minimal) {
           setUser(minimal);
-          // Guarda para persistencia (evita pantallas en blanco al refrescar)
           localStorage.setItem(AUTH_STORAGE_KEYS.user, JSON.stringify(minimal));
         }
       }
@@ -71,10 +67,8 @@ export const AuthProvider = ({ children }) => {
       delete api.defaults.headers.common.Authorization;
     }
     setLoading(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  // 3) Interceptor 401 → logout
   useEffect(() => {
     const interceptor = api.interceptors.response.use(
       (response) => response,
@@ -86,7 +80,6 @@ export const AuthProvider = ({ children }) => {
     return () => api.interceptors.response.eject(interceptor);
   }, []);
 
-  // 4) Login usuario/password
   const login = async (email, password) => {
     try {
       const res = await apiLoginUser(email, password);
@@ -112,7 +105,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 5) Login con Google
   const loginWithGoogle = async (idToken) => {
     try {
       const res = await apiLoginWithGoogle(idToken);
@@ -139,7 +131,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 6) Logout
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -148,13 +139,12 @@ export const AuthProvider = ({ children }) => {
     delete api.defaults.headers.common.Authorization;
   };
 
-  // 7) Memo del contexto
   const value = useMemo(
     () => ({
       user,
       token,
       loading,
-      isAuthenticated: !!token, // ✅ más robusto que basarse en user
+      isAuthenticated: !!token, 
       setUser,
       setToken,
       login,

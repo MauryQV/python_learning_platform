@@ -24,19 +24,28 @@ const ResetPasswordPage = lazy(() => import("./pages/ResetPassword.jsx"));
 // Authenticated pages
 const ProfilePage = lazy(() => import("./pages/ProfilePage.jsx"));
 const EditProfile = lazy(() => import("./pages/EditProfile.jsx"));
-const AdminDashboardPage = lazy(() => import("./pages/admin/AdminDashboardPage.jsx"));
+const AdminDashboardPage = lazy(() =>
+  import("./pages/admin/AdminDashboardPage.jsx")
+);
 const TeacherAdminCoursesPage = lazy(() =>
   import("./pages/teacher_admin/TeacherAdminCoursesPage.jsx")
 );
 
-// 🧑‍🏫 Docentes (lista para el admin)
+// Teacher admin (admin_teacher)
 const TeachersPage = lazy(() =>
   import("./pages/teacher_admin/TeachersPage.jsx")
 );
 
-// 🆕 Nueva vista del PROFESOR (teacher_edit → /teacher-edit/…)
 const TeacherEditCoursesPage = lazy(() =>
   import("./pages/teacher_edit/TeacherEditCoursesPage.jsx")
+);
+
+const TeacherEditCourseView = lazy(() =>
+  import("./pages/teacher_edit/TeacherEditCourseView.jsx")
+);
+
+const TeacherEditTopicsPage = lazy(() =>
+  import("./pages/teacher_edit/TeacherEditTopicsPage.jsx")
 );
 
 function NotFound() {
@@ -69,11 +78,13 @@ export default function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/verify-email" element={<VerifyEmailPage />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route
+                  path="/forgot-password"
+                  element={<ForgotPasswordPage />}
+                />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
-                <Route path="/dashboard" element={<Navigate to="/profile" replace />} />
 
-                {/* Protected student profile */}
+                {/* Profile */}
                 <Route
                   path="/profile"
                   element={
@@ -91,7 +102,7 @@ export default function App() {
                   }
                 />
 
-                {/* Admin area */}
+                {/* Admin */}
                 <Route
                   path="/admin"
                   element={
@@ -101,7 +112,7 @@ export default function App() {
                   }
                 />
 
-                {/* Teacher Admin area */}
+                {/* Teacher Admin */}
                 <Route
                   path="/teacher-admin"
                   element={<Navigate to="/teacher-admin/courses" replace />}
@@ -116,7 +127,6 @@ export default function App() {
                   }
                 />
 
-                {/* RUTA: Docentes */}
                 <Route
                   path="/teacher-admin/teachers"
                   element={
@@ -126,7 +136,6 @@ export default function App() {
                   }
                 />
 
-                {/* 🆕 PROFESOR (Teacher Edit) */}
                 <Route
                   path="/teacher-edit"
                   element={<Navigate to="/teacher-edit/courses" replace />}
@@ -135,8 +144,44 @@ export default function App() {
                 <Route
                   path="/teacher-edit/courses"
                   element={
-                    <ProtectedRoute roles={["teacher_edit"]}>
+                    <ProtectedRoute roles={["teacher_editor"]}>
                       <TeacherEditCoursesPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/teacher-edit/course/:courseId"
+                  element={
+                    <ProtectedRoute roles={["teacher_editor"]}>
+                      <TeacherEditCourseView />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/teacher-edit/topic/topics"
+                  element={
+                    <ProtectedRoute roles={["teacher_editor"]}>
+                      <TeacherEditTopicsPage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/teacher-edit/course/:courseId/topics/create"
+                  element={
+                    <ProtectedRoute roles={["teacher_editor"]}>
+                      <TeacherEditTopicsPage openCreate />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/teacher-edit/course/:courseId/topics/:topicId/edit"
+                  element={
+                    <ProtectedRoute roles={["teacher_editor"]}>
+                      <TeacherEditTopicsPage openEdit />
                     </ProtectedRoute>
                   }
                 />
@@ -147,6 +192,7 @@ export default function App() {
             </Suspense>
           </BrowserRouter>
         </AuthProvider>
+
         <ReactQueryDevtools initialIsOpen={false} />
       </GoogleOAuthProvider>
     </QueryClientProvider>

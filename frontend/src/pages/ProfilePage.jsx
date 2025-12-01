@@ -1,4 +1,16 @@
-import { Box, Container, Paper, Stack, Typography, Button, List, ListItem, ListItemText, IconButton, Tooltip } from "@mui/material";
+import {
+  Box,
+  Container,
+  Paper,
+  Stack,
+  Typography,
+  Button,
+  List,
+  ListItem,
+  ListItemText,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
 import { useEffect } from "react";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +25,7 @@ import { useAuth } from "@/context/AuthContext";
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { user } = useAuth();
 
   const {
     state: { initialUser, goals, goalInput },
@@ -81,10 +94,9 @@ export default function ProfilePage() {
             alignItems: "start",
           }}
         >
-          {/* LEFT: Profile Card */}
           <ProfileCard
             name={fullName}
-            role={initialUser?.role || "student"}
+            role={user?.role || initialUser?.role || "student"}
             email={initialUser?.email}
             bio={initialUser?.bio || "Bio"}
             avatarUrl={initialUser?.profileImage}

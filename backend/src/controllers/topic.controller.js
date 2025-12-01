@@ -1,4 +1,8 @@
-import { createTopicService, updateTopicService , getAllTopicsService } from "../services/topic.service.js";
+import {
+  createTopicService,
+  updateTopicService,
+  getAllTopicsService,
+} from "../services/topic.service.js";
 
 export const createTopicController = async (req, res, next) => {
   try {
@@ -19,8 +23,6 @@ export const createTopicController = async (req, res, next) => {
     next(error);
   }
 };
-
-
 
 export const updateTopicController = async (req, res, next) => {
   try {

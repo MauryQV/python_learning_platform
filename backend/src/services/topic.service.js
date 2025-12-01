@@ -1,14 +1,21 @@
-import { createTopic, updateTopic, getAllTopics } from "../repositories/topic.repository.js";
+import {
+  createTopic,
+  updateTopic,
+  getAllTopics,
+} from "../repositories/topic.repository.js";
 
-export const createTopicService = async(title,description,order,courseId) => {
-
-    const topic = await createTopic(title,description,order,courseId);
-    return {
-        message : "Topico",
-        topic
-    }
-
-}
+export const createTopicService = async (
+  title,
+  description,
+  order,
+  courseId
+) => {
+  const topic = await createTopic(title, description, order, courseId);
+  return {
+    message: "Topico",
+    topic,
+  };
+};
 
 export const updateTopicService = async (topicId, topicData) => {
   const { title, description, order, courseId } = topicData;
@@ -17,7 +24,13 @@ export const updateTopicService = async (topicId, topicData) => {
     throw new Error("Debe enviar al menos un campo para actualizar.");
   }
 
-  const updatedTopic = await updateTopic(topicId, title, description, order, courseId);
+  const updatedTopic = await updateTopic(
+    topicId,
+    title,
+    description,
+    order,
+    courseId
+  );
   return {
     message: "Tópico actualizado correctamente.",
     topic: updatedTopic,

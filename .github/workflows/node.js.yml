@@ -1,6 +1,4 @@
-# .github/workflows/node.js.yml
-
-name: CI for Backend and Frontend
+name: CI/CD Pipeline (Backend & Frontend)
 
 on:
   push:
@@ -9,65 +7,80 @@ on:
     branches: [ "main" ]
 
 jobs:
-  # --- TRABAJO PARA EL BACKEND ---
-  backend-ci:
-    name: Backend CI
+  # -----------------------------------------------------------------
+  # TRABAJO 1: FRONTEND (Solo verifica que no haya errores)
+  # -----------------------------------------------------------------
+  frontend-check:
+    name: 🎨 Frontend Check (Lint & Build)
     runs-on: ubuntu-latest
-
-    # Directorio de trabajo por defecto para todos los pasos de este job
-    defaults:
-      run:
-        working-directory: ./backend
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Use Node.js 20.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-        # Le decimos a la caché dónde encontrar el lockfile del backend
-        cache-dependency-path: backend/package-lock.json
-
-    - name: Install backend dependencies
-      run: npm ci
-
-    - name: Generate Prisma Client
-      run: npx prisma generate
-
-    - name: Run backend linter
-      run: npm run lint
-
-
-  # --- TRABAJO PARA EL FRONTEND ---
-  frontend-ci:
-    name: Frontend CI
-    runs-on: ubuntu-latest
-
-    # Directorio de trabajo por defecto para todos los pasos de este job
     defaults:
       run:
         working-directory: ./frontend
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Lint
+        run: npm run lint
+        
+      - name: Build Test
+        run: npm run build
 
-    - name: Use Node.js 20.x
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-        # Le decimos a la caché dónde encontrar el lockfile del frontend
-        cache-dependency-path: frontend/package-lock.json
+  # -----------------------------------------------------------------
+  # TRABAJO 2: BACKEND CI (Tests y Prisma)
+  # -----------------------------------------------------------------
+  backend-ci:
+    name: 🧩 Backend CI (Test & Lint)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
 
-    - name: Install frontend dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Run frontend linter
-      run: npm run lint
+      - name: Generate Prisma Client (Importante!)
+        run: npx prisma generate
 
-    - name: Build frontend
-      run: npm run build --if-present
+      - name: Lint & Test
+        run: |
+          npm run lint
+          npm test --if-present
+
+  # -----------------------------------------------------------------
+  # TRABAJO 3: DOCKER DELIVERY (Lo que pide el docente)
+  # -----------------------------------------------------------------
+  docker-push:
+    name: 🐳 Docker Build & Push
+    needs: [backend-ci] # Solo se ejecuta si el backend está OK
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' # Solo corre si subes a la rama main
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Backend Image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend # Carpeta del backend
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/mi-backend-proyecto:latest

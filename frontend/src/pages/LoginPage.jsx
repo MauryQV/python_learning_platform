@@ -13,6 +13,7 @@ export default function LoginPage() {
   const { loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
+  // REDIRECCIÓN POR ROL
   const redirectByRole = (role) => {
     const normalized = (role || "").toLowerCase();
 
@@ -25,8 +26,8 @@ export default function LoginPage() {
         navigate("/teacher-admin/courses", { replace: true });
         break;
 
-      case "teacher":
-        navigate("/dashboard", { replace: true });
+      case "teacher_editor":
+        navigate("/teacher-edit/courses", { replace: true });
         break;
 
       case "student":
@@ -39,6 +40,7 @@ export default function LoginPage() {
     }
   };
 
+  // LOGIN GOOGLE
   const handleGoogleIdToken = async (idToken) => {
     if (!idToken) return;
 
@@ -50,14 +52,30 @@ export default function LoginPage() {
     }
   };
 
+  // LOGIN NORMAL + REDIRECCIÓN
   const handleLoginAndRedirect = async (e) => {
     console.log("🟡 handleLoginAndRedirect llamado");
+
     const result = await handleLogin(e);
     console.log("🟡 Resultado del login:", result);
 
-    if (result?.success && result?.role) {
-      console.log("🟡 Login exitoso, redirigiendo con role:", result.role);
-      redirectByRole(result.role);
+    if (result?.success && result?.user) {
+      console.log("🟡 Login exitoso, normalizando usuario…");
+
+      // ⭐⭐⭐ FIX CRÍTICO: Normalizamos el usuario
+      const fixedUser = {
+        ...result.user,
+        id: result.user.userId, // 🔥 NECESARIO PARA EL HOOK
+      };
+
+      // Guardamos usuario y rol normalizado
+      localStorage.setItem("user", JSON.stringify(fixedUser));
+      localStorage.setItem("role", fixedUser.role);
+      localStorage.setItem("token", result.token);
+
+      console.log("🟡 Login exitoso, redirigiendo con role:", fixedUser.role);
+
+      redirectByRole(fixedUser.role);
     } else {
       console.log("❌ Login falló:", result?.error);
     }

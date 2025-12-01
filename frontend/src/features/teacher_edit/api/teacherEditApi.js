@@ -32,4 +32,14 @@ export async function updateTopic(topicId, data) {
   const res = await api.put(`/topic/update-topic/${topicId}`, data);
   return res.data;
 }
+export async function getCourseDetails(courseId) {
+  try {
+    const res = await api.get(`/course/${courseId}`);
+    return res.data;
+  } catch (err) {
+    console.error("❌ Error fetching course details:", err);
+    throw err;
+  }
+}
+
 

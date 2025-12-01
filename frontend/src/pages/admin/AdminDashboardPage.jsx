@@ -7,16 +7,21 @@ import AdminUsersTable from "@/features/admin/ui/AdminUsersTable";
 import { useAdminUsers } from "@/features/admin/model/useAdminUsers";
 
 export default function DashboardPage() {
+  console.log("Componente renderizado");
+  console.log("🟣 AdminDashboardPage RENDERIZANDO");
+
   const qc = useQueryClient();
+  console.log("🟣 QueryClient OK");
+
   const { enqueueSnackbar } = useSnackbar();
+  console.log("🟣 useSnackbar OK");
 
-  //ahora también traemos los roles del backend y el cambio de rol
   const { usersQuery, rolesQuery, toggleStatus, changeRole } = useAdminUsers();
-
-  const handleRefresh = () => {
-    qc.invalidateQueries({ queryKey: ["admin", "users"] });
-  };
-
+  console.log("🟣 useAdminUsers OK", {
+    usersData: usersQuery.data,
+    usersLoading: usersQuery.isLoading,
+    rolesData: rolesQuery.data,
+  });
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#fff" }}>
       <AdminBanner />
@@ -24,9 +29,7 @@ export default function DashboardPage() {
         <AdminUsersTable
           users={usersQuery.data ?? []}
           loading={usersQuery.isLoading || usersQuery.isFetching}
-          allowedRoles={rolesQuery.data ?? []} 
-          onRefresh={handleRefresh}
-          // Espera (id, currentIsActive:boolean)
+          allowedRoles={rolesQuery.data ?? []}
           onToggleStatus={(id, currentIsActive) =>
             toggleStatus.mutate(
               { id, currentIsActive },

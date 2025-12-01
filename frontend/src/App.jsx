@@ -24,6 +24,7 @@ const ResetPasswordPage = lazy(() => import("./pages/ResetPassword.jsx"));
 // Authenticated pages
 const ProfilePage = lazy(() => import("./pages/ProfilePage.jsx"));
 const EditProfile = lazy(() => import("./pages/EditProfile.jsx"));
+
 const AdminDashboardPage = lazy(() =>
   import("./pages/admin/AdminDashboardPage.jsx")
 );
@@ -76,6 +77,7 @@ export default function App() {
 
                 {/* Public routes */}
                 <Route path="/login" element={<LoginPage />} />
+
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/verify-email" element={<VerifyEmailPage />} />
                 <Route

@@ -51,11 +51,15 @@ export default function LoginPage() {
   };
 
   const handleLoginAndRedirect = async (e) => {
-    await handleLogin(e);
+    console.log("🟡 handleLoginAndRedirect llamado");
+    const result = await handleLogin(e);
+    console.log("🟡 Resultado del login:", result);
 
-    if (isSuccess || localStorage.getItem("token")) {
-      const userRole = localStorage.getItem("role");
-      redirectByRole(userRole);
+    if (result?.success && result?.role) {
+      console.log("🟡 Login exitoso, redirigiendo con role:", result.role);
+      redirectByRole(result.role);
+    } else {
+      console.log("❌ Login falló:", result?.error);
     }
   };
 

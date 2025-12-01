@@ -6,9 +6,11 @@ export async function getAssignedCourses() {
   return res.data;
 }
 
+// eslint-disable-next-line no-unused-vars
 export const getCourseDetails = async (id) => { 
   return undefined;
 };
+
 
 export async function getTopics() {
   const res = await api.get(`/topic/topics`);

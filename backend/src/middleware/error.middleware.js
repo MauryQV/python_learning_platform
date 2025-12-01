@@ -1,4 +1,5 @@
-export const errorHandler = (err, req, res, next) => {
+// eslint-disable-next-line no-unused-vars
+export const errorHandler = (err, req, res, _next) => {
   //console.error("[ERROR]", err);
 
   const statusCode = err.statusCode || 500;

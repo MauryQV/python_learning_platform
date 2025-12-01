@@ -1,11 +1,16 @@
 import { api } from "@/api/axiosInstance";
 
 
-/*export async function getAssignedCourses() {
+export async function getAssignedCourses() {
   const res = await api.get("/teacher_edit/courses");
   return res.data;
 }
-*/
+
+// eslint-disable-next-line no-unused-vars
+export const getCourseDetails = async (id) => { 
+  return undefined;
+};
+
 
 export async function getTopics() {
   const res = await api.get(`/topic/topics`);

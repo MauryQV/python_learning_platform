@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  backend:
+
+    image: chentexdd/mi-backend-proyecto:latest  
+    
+    ports:
+      - "3000:2999"
+    
+    env_file:
+      - ./backend/.env
+      
+    # Opcional: Para que si se cae, reviva solo
+    restart: always
+  # --- FRONTEND ---
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173" # O el puerto que use tu Vite
+    env_file:
+      - ./frontend/.env 
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules

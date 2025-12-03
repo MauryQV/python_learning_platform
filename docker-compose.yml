@@ -3,16 +3,20 @@ version: '3.8'
 services:
   backend:
     image: chentexdd/mi-backend-proyecto:latest
+    # Mapeamos DIRECTO: Puerto 2999 de tu PC -> Puerto 2999 del contenedor
     ports:
-      - "3000:3000"
+      - "2999:2999"
     env_file:
       - ./backend/.env
     restart: always
 
   frontend:
-    image: chentexdd/mi-frontend-proyecto:latest
+    build: ./frontend
     ports:
-      - "5173:80"
+      - "5173:5173"
     env_file:
       - ./frontend/.env
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     restart: always
